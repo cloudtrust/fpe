@@ -2568,70 +2568,6 @@ func TestFF3CryptBlocks(t *testing.T) {
 	}
 }
 
-// This test uses the NIST test vectors to validate the FF3 encryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF3Encrypter(t *testing.T) {
-	for _, test := range ff3Tests {
-		// The NIST standard require to reverse the key bytes for FF3.
-		var key = RevB(test.key)
-
-		var encrypter BlockMode
-		{
-			var err error
-			encrypter, err = getFF3Encrypter(key, test.tweak, test.radix)
-			assert.Nil(t, err)
-		}
-
-		// Encrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.in)
-		encrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		assert.Equal(t, test.out, resultInPlace)
-
-		// Encrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.in)
-		var dataDst = make([]byte, len(dataSrc))
-		encrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		assert.Equal(t, dataSrc, NumeralStringToBytes(test.in))
-		assert.Equal(t, test.out, resultNotInPlace)
-	}
-}
-
-// This test uses the NIST test vectors to validate the FF3 decryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF3Decrypter(t *testing.T) {
-	for _, test := range ff3Tests {
-		// The NIST standard require to reverse the key bytes for FF3.
-		var key = RevB(test.key)
-
-		var decrypter BlockMode
-		{
-			var err error
-			decrypter, err = getFF3Decrypter(key, test.tweak, test.radix)
-			assert.Nil(t, err)
-		}
-
-		// Decrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.out)
-		decrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		assert.Equal(t, test.in, resultInPlace)
-
-		// Decrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.out)
-		var dataDst = make([]byte, len(dataSrc))
-		decrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		assert.Equal(t, dataSrc, NumeralStringToBytes(test.out))
-		assert.Equal(t, test.in, resultNotInPlace)
-	}
-}
-
 // This test check that the function SetTweak of the FF3Encrypter and FF3Decrypter works correctly.
 func TestSetFF3Tweak (t *testing.T) {
 	var key, tweak, _ []byte = getRandomParameters(ff3DefaultKeySize, tweakLenFF3, 0)
@@ -2790,53 +2726,6 @@ func TestSetFF3Radix (t *testing.T) {
 	assert.Panics(t, f)
 }
 
-// This test uses the NIST test vectors to validate the p value for each encryption and decryption round.
-func TestGetFF3P(t *testing.T) {
-	for _, test := range ff3Tests {
-		var radix = test.radix
-		var tweak = test.tweak
-		// For the first encryption round, the x value is the right half of the input numeral string.
-		var x = test.in[test.u:]
-
-		// Iter over each encryption round.
-		var rounds = test.encRounds
-		for i, round := range rounds {
-			var expectedP = round.p
-			var w []byte
-			if i % 2 == 0 {
-				w = tweak[4:]
-			} else {
-				w = tweak[:4]
-			}
-			var p = getFF3P(w, uint32(i), radix, x)
-			// The x value is the numeral string b from the previous round.
-			x = round.b
-
-			assert.Equal(t, p, expectedP)
-		}
-
-		// For the first decryption round, the x value is the left half of the output numeral string.
-		x = test.out[:test.u]
-		// Iter over each decryption round.
-		rounds = test.decRounds
-		for i, round := range rounds {
-			var expectedP = round.p
-			var w []byte
-			var idx = uint64(roundsFF3-i-1)
-			if idx % 2 == 0 {
-				w = tweak[4:]
-			} else {
-				w = tweak[:4]
-			}
-			var p = getFF3P(w, uint32(idx), radix, x)
-			// The x value is the numeral string a from the previous round.
-			x = round.a
-
-			assert.Equal(t, p, expectedP)
-		}
-	}
-}
-
 // This test uses the NIST test vectors to validate the s value for each encryption and decryption round.
 func TestGetFF3S(t *testing.T) {
 	for _, test := range ff3Tests {
@@ -2922,6 +2811,7 @@ func TestGetFF3C(t *testing.T) {
 		rounds = test.decRounds
 		for i, round := range rounds {
 			var m uint32
+			var roundsFF3 = int(getFF3NbrRounds(len(test.in)))
 			var idx = roundsFF3-i-1
 			if idx % 2 == 0 {
 				m = test.u

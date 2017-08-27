@@ -2380,67 +2380,6 @@ func TestFF1CryptBlocks(t *testing.T) {
 	}
 }
 
-// This test uses the NIST test vectors to validate the FF1 encryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF1Encrypter(t *testing.T) {
-	for _, test := range ff1Tests {
-
-		var encrypter BlockMode
-		{
-			var err error
-			encrypter, err = getFF1Encrypter(test.key, test.tweak, test.radix)
-			assert.Nil(t, err)
-		}
-
-		// Encrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.in)
-		encrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		assert.Equal(t, test.out, resultInPlace)
-
-		//Encrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.in)
-		var dataDst = make([]byte, len(dataSrc))
-		encrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		// Input data should not be modified
-		assert.Equal(t, dataSrc, NumeralStringToBytes(test.in))
-		assert.Equal(t, test.out, resultNotInPlace)
-	}
-}
-
-// This test uses the NIST test vectors to validate the FF1 decryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF1Decrypter(t *testing.T) {
-	for _, test := range ff1Tests {
-
-		var decrypter BlockMode
-		{
-			var err error
-			decrypter, err = getFF1Decrypter(test.key, test.tweak, test.radix)
-			assert.Nil(t, err)
-		}
-
-		// Decrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.out)
-		decrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		assert.Equal(t, test.in, resultInPlace)
-
-		// Decrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.out)
-		var dataDst = make([]byte, len(dataSrc))
-		decrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		assert.Equal(t, dataSrc, NumeralStringToBytes(test.out))
-		assert.Equal(t, test.in, resultNotInPlace)
-	}
-}
-
 // This test check that the function SetTweak of the FF1Encrypter and FF1Decrypter works correctly.
 func TestSetFF1Tweak (t *testing.T) {
 	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
@@ -2660,7 +2599,9 @@ func TestGetQ(t *testing.T) {
 		x = test.out[:test.u]
 		// Iter over each decryption round.
 		for i, round := range test.decRounds {
-			var idx = roundsFF1-i-1
+			var standardNbrOfFF1Rounds = 10
+
+			var idx = standardNbrOfFF1Rounds-i-1
 			var expectedQ = round.q
 			var q = getFF1Q(tweak, radix, beta, idx, x)
 			x = round.a
