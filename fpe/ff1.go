@@ -17,8 +17,6 @@ import (
 )
 
 const (
-	// The number of Feistel rounds must be 10.
-	roundsFF1 = 10
 	// The tweak length must be in [0..maxTweakLenFF1].
 	minTweakLenFF1 = 0
 	maxTweakLenFF1 = 1 << 16
@@ -105,6 +103,7 @@ func (x *ff1Encrypter) CryptBlocks(dst, src []byte) {
 	var d = getFF1D(beta)
 	var p = getFF1P(radix, u, n, t)
 
+	var roundsFF1 = getFF1NbrRounds(len(numeralString))
 	for i := 0; i < roundsFF1; i++ {
 		var q = getFF1Q(tweak, radix, beta, i, b)
 		var r = prf(x.cbcMode, append(p, q...))
@@ -189,6 +188,7 @@ func (x *ff1Decrypter) CryptBlocks(dst, src []byte) {
 	var d = getFF1D(beta)
 	var p = getFF1P(radix, u, n, t)
 
+	var roundsFF1 = getFF1NbrRounds(len(numeralString))
 	for i := roundsFF1-1; i >= 0; i-- {
 		var q = getFF1Q(tweak, radix, beta, i, a)
 		var r = prf(x.cbcMode, append(p, q...))
@@ -314,4 +314,21 @@ func getFF1CDec(x []uint16, y *big.Int, radix uint32, m uint32) (*big.Int) {
 	c.Sub(c, y)
 	c.Mod(c, radixM)
 	return c
+}
+
+// Fix the attack described in https://eprint.iacr.org/2016/794.pdf by increasing the
+// number of rounds.
+func getFF1NbrRounds(l int) (int) {
+	switch {
+	case l >= 32:
+		return 12
+	case l >= 20:
+		return 18
+	case l >= 14:
+		return 24
+	case l >= 10:
+		return 30
+	default:
+		return 36
+	}
 }

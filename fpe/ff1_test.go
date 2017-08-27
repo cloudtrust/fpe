@@ -2226,82 +2226,6 @@ func getBigInt(s string) (big.Int) {
 	return *x
 }
 
-// This test uses the NIST test vectors to validate the FF1 encryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF1Encrypter(t *testing.T) {
-	for _, test := range ff1Tests {
-		var aesBlock, err = aes.NewCipher(test.key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
-
-		var iv = make([]byte, 16)
-		var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
-		var encrypter = NewFF1Encrypter(aesBlock, cbcMode, test.tweak, test.radix)
-
-		// Encrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.in)
-		encrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		if !reflect.DeepEqual(test.out, resultInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultInPlace, test.out)
-		}
-
-		//Encrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.in)
-		var dataDst = make([]byte, len(dataSrc))
-		encrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		if !bytes.Equal(dataSrc, NumeralStringToBytes(test.in)) {
-			t.Errorf("%s(%s): input data should not be modified", t.Name(), test.name)
-		}
-		if !reflect.DeepEqual(test.out, resultNotInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultNotInPlace, test.out)
-		}
-	}
-}
-
-// This test uses the NIST test vectors to validate the FF1 decryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF1Decrypter(t *testing.T) {
-	for _, test := range ff1Tests {
-		var aesBlock, err = aes.NewCipher(test.key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
-
-		var iv = make([]byte, 16)
-		var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
-		var decrypter = NewFF1Decrypter(aesBlock, cbcMode, test.tweak, test.radix)
-
-		// Decrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.out)
-		decrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		if !reflect.DeepEqual(test.in, resultInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultInPlace, test.in)
-		}
-
-		// Decrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.out)
-		var dataDst = make([]byte, len(dataSrc))
-		decrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		if !bytes.Equal(dataSrc, NumeralStringToBytes(test.out)) {
-			t.Errorf("%s(%s): input data should not be modified", t.Name(), test.name)
-		}
-		if !reflect.DeepEqual(test.in, resultNotInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultNotInPlace, test.in)
-		}
-	}
-}
-
 // This test check that the function SetTweak of the FF1Encrypter and FF1Decrypter works correctly.
 func TestSetFF1Tweak (t *testing.T) {
 	var key = make([]byte, 16)
@@ -2427,7 +2351,9 @@ func TestGetQ(t *testing.T) {
 		x = test.out[:test.u]
 		// Iter over each decryption round.
 		for i, round := range test.decRounds {
-			var idx = roundsFF1-i-1
+			var standardNbrOfFF3Rounds = 10
+
+			var idx = standardNbrOfFF3Rounds-i-1
 			var expectedQ = round.q
 			var q = getFF1Q(tweak, radix, beta, idx, x)
 			x = round.a

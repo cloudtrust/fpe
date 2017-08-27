@@ -2436,82 +2436,6 @@ var ff3Tests = []struct {
 	},
 }
 
-// This test uses the NIST test vectors to validate the FF3 encryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF3Encrypter(t *testing.T) {
-	for _, test := range ff3Tests {
-		// The NIST standard require to reverse the key bytes for FF3.
-		var key = RevB(test.key)
-		var aesBlock, err = aes.NewCipher(key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
-
-		var encrypter = NewFF3Encrypter(aesBlock, test.tweak, test.radix)
-
-		// Encrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.in)
-		encrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		if !reflect.DeepEqual(test.out, resultInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultInPlace, test.out)
-		}
-
-		// Encrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.in)
-		var dataDst = make([]byte, len(dataSrc))
-		encrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		if !bytes.Equal(dataSrc, NumeralStringToBytes(test.in)) {
-			t.Errorf("%s(%s): input data should not be modified", t.Name(), test.name)
-		}
-		if !reflect.DeepEqual(test.out, resultNotInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultNotInPlace, test.out)
-		}
-	}
-}
-
-// This test uses the NIST test vectors to validate the FF3 decryption. Here we only
-// check that the output is correct for both in place and not in place encryption.
-func TestFF3Decrypter(t *testing.T) {
-	for _, test := range ff3Tests {
-		// The NIST standard require to reverse the key bytes for FF3.
-		var key = RevB(test.key)
-		var aesBlock, err = aes.NewCipher(key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
-
-		var decrypter = NewFF3Decrypter(aesBlock, test.tweak, test.radix)
-
-		// Decrypt in place.
-		var dataInPlace = NumeralStringToBytes(test.out)
-		decrypter.CryptBlocks(dataInPlace, dataInPlace)
-		var resultInPlace = BytesToNumeralString(dataInPlace)
-
-		if !reflect.DeepEqual(test.in, resultInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultInPlace, test.in)
-		}
-
-		// Decrypt not in place.
-		var dataSrc = NumeralStringToBytes(test.out)
-		var dataDst = make([]byte, len(dataSrc))
-		decrypter.CryptBlocks(dataDst, dataSrc)
-		var resultNotInPlace = BytesToNumeralString(dataDst)
-
-		if !bytes.Equal(dataSrc, NumeralStringToBytes(test.out)) {
-			t.Errorf("%s(%s): input data should not be modified", t.Name(), test.name)
-		}
-		if !reflect.DeepEqual(test.in, resultNotInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultNotInPlace, test.in)
-		}
-	}
-}
-
 // This test check that the function SetTweak of the FF3Encrypter and FF3Decrypter works correctly.
 func TestSetFF3Tweak (t *testing.T) {
 	var key = make([]byte, 16)
@@ -2533,7 +2457,6 @@ func TestSetFF3Tweak (t *testing.T) {
 	if !ok {
 		t.Errorf("%s: FF3Encrypter has no SetTweak function", t.Name())
 	}
-
 	var plaintext = make([]byte, 100)
 	var ciphertext = make([]byte, 100)
 	var ciphertext2 = make([]byte, 100)
@@ -2564,57 +2487,6 @@ func TestSetFF3Tweak (t *testing.T) {
 
 	if bytes.Equal(ciphertext, ciphertext2) {
 		t.Errorf("%s: changing the tweak must change the ciphertext", t.Name())
-	}
-}
-
-// This test uses the NIST test vectors to validate the p value for each encryption and decryption round.
-func TestGetFF3P(t *testing.T) {
-	for _, test := range ff3Tests {
-		var radix = test.radix
-		var tweak = test.tweak
-		// For the first encryption round, the x value is the right half of the input numeral string.
-		var x = test.in[test.u:]
-
-		// Iter over each encryption round.
-		var rounds = test.encRounds
-		for i, round := range rounds {
-			var expectedP = round.p
-			var w []byte
-			if i % 2 == 0 {
-				w = tweak[4:]
-			} else {
-				w = tweak[:4]
-			}
-			var p = getFF3P(w, uint32(i), radix, x)
-			// The x value is the numeral string b from the previous round.
-			x = round.b
-
-			if !bytes.Equal(p, expectedP) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, p, expectedP)
-			}
-		}
-
-		// For the first decryption round, the x value is the left half of the output numeral string.
-		x = test.out[:test.u]
-		// Iter over each decryption round.
-		rounds = test.decRounds
-		for i, round := range rounds {
-			var expectedP = round.p
-			var w []byte
-			var idx = uint64(roundsFF3-i-1)
-			if idx % 2 == 0 {
-				w = tweak[4:]
-			} else {
-				w = tweak[:4]
-			}
-			var p = getFF3P(w, uint32(idx), radix, x)
-			// The x value is the numeral string a from the previous round.
-			x = round.a
-
-			if !bytes.Equal(p, expectedP) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, p, expectedP)
-			}
-		}
 	}
 }
 
@@ -2716,6 +2588,7 @@ func TestGetFF3C(t *testing.T) {
 		rounds = test.decRounds
 		for i, round := range rounds {
 			var m uint32
+			var roundsFF3 = int(getFF3NbrRounds(len(test.in)))
 			var idx = roundsFF3-i-1
 			if idx % 2 == 0 {
 				m = test.u

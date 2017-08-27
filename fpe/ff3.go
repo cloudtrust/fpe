@@ -17,10 +17,8 @@ import (
 )
 
 const (
-	// The number of Feistel rounds must be 8.
-	roundsFF3 = 8
 	// The tweak must be 8 bytes.
-	tweakLenFF3 = 8
+	tweakLenFF3 = 6
 	// The radix must be in [2..2^16].
 	minRadixFF3 = 2
 	maxRadixFF3 = 1<<16
@@ -87,10 +85,11 @@ func (x *ff3Encrypter) CryptBlocks(dst, src []byte) {
 	var v = uint32(n) - u
 	var a = numeralString[:u]
 	var b = numeralString[u:]
-	var tl = tweak[:4]
-	var tr = tweak[4:]
+	var tl = tweak[:3]
+	var tr = tweak[3:]
 
-	for i := uint32(0); i < roundsFF3; i++ {
+	var roundsFF3 = getFF3NbrRounds(len(numeralString))
+	for i := 0; i < roundsFF3; i++ {
 		var w []byte
 		var m uint32
 		if i % 2 == 0 {
@@ -100,7 +99,7 @@ func (x *ff3Encrypter) CryptBlocks(dst, src []byte) {
 			m = v
 			w = tl
 		}
-		var p = getFF3P(w, i, radix, b)
+		var p = getFF3P(w, uint32(i), radix, b)
 		var s = getFF3S(p, x.aesBlock)
 		var y = num(s)
 		var c = getFF3CEnc(a, y, radix, m)
@@ -165,9 +164,10 @@ func (x *ff3Decrypter) CryptBlocks(dst, src []byte) {
 	var v = uint32(n) - u
 	var a = numeralString[:u]
 	var b = numeralString[u:]
-	var tl = tweak[:4]
-	var tr = tweak[4:]
+	var tl = tweak[:3]
+	var tr = tweak[3:]
 
+	var roundsFF3 = getFF3NbrRounds(len(numeralString))
 	for i := roundsFF3-1; i >= 0 ; i-- {
 		var w []byte
 		var m uint32
@@ -207,13 +207,15 @@ func maxLength(radix uint32) int {
 
 // getFF3P takes a byte string w, the integers i, radix and a numeral string x. It returns
 // p = w xor [i]4 || [numRadix(rev(x))]12, where [x]y means x represented as a string of s bytes.
+// This function was modified as suggested in the section 6 of https://eprint.iacr.org/2017/521.pdf.
+// The goal is to protect us against the attack described in the same paper.
 func getFF3P(w []byte, i, radix uint32, x []uint16) ([]byte){
 	var p = make([]byte, blockSizeFF3)
 
-	p[0] = w[0] ^ byte(i >> 24)
-	p[1] = w[1] ^ byte(i >> 16)
-	p[2] = w[2] ^ byte(i >> 8)
-	p[3] = w[3] ^ byte(i)
+	p[0] = w[0]
+	p[1] = w[1]
+	p[2] = w[2]
+	p[3] = byte(i)
 	copy(p[4:], getAsBBytes(numRadix(rev(x), radix), 12))
 
 	return p
@@ -245,4 +247,21 @@ func getFF3CDec(x []uint16, y *big.Int, radix, m uint32) (*big.Int) {
 	var radixM = big.NewInt(0).Exp(big.NewInt(int64(radix)), big.NewInt(int64(m)), nil)
 	c.Mod(c, radixM)
 	return c
+}
+
+// Fix the attack described in https://eprint.iacr.org/2016/794.pdf by increasing the
+// number of rounds.
+func getFF3NbrRounds(l int) (int) {
+	switch {
+	case l >= 32:
+		return 12
+	case l >= 20:
+		return 18
+	case l >= 14:
+		return 24
+	case l >= 10:
+		return 30
+	default:
+		return 36
+	}
 }
