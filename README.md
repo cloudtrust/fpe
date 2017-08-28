@@ -85,8 +85,11 @@ fmt.Printf("Decrypted:  %d\n", decrypted)
 
 To encipher data such as Strings or Credit Cards, see the [helpers](https://github.com/cloudtrust/fpe-field-format).
 
-There are attacks on the NIST standard:
+# There are attacks on the NIST standard
+
 The first is described in the publication [Message-recovery attacks on Feistel-based Format Preserving Encryption](https://eprint.iacr.org/2016/794.pdf) by Bellare, Hoang, and Tessaro. On page 5 of the same document, the authors suggest a simple fix: increasing the number of Feistel rounds.
+
 The second attack targets FF3 and is described in the publication [Breaking The FF3 Format-Preserving Encryption Standard Over Small Domains](https://eprint.iacr.org/2017/521.pdf) by F. Durak and S. Vaudenay. The publication also describes how to fix FF3. The NIST published a [statement](https://beta.csrc.nist.gov/News/2017/Recent-Cryptanalysis-of-FF3) and expects to revise the standard, either to fix or withdraw FF3.
-We provide the branch fpe-fix that includes both fixes. That is an augmented number of rounds and the modification of FF3. However, this branch does not comply with the standard anymore, and there are no test vectors to validate it.
+
+We provide the branch [fpe-fix](https://github.com/cloudtrust/fpe/tree/fpe-fix) that includes both fixes. That is an augmented number of rounds and the modification of FF3. However, this branch does not comply with the standard anymore, and there are no test vectors to validate it.
 
