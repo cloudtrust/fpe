@@ -1,4 +1,7 @@
 # fpe
+
+![travis ci status](https://travis-ci.org/cloudtrust/fpe.svg?branch=master)
+
 This is an implementation of the NIST Special Publication 800-38G, Recommendation for Block Cipher Modes of Operation: Methods for Format-Preserving Encryption.
 
 Implementations of the FF1 and FF3 schemes are provided.
