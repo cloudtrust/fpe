@@ -71,13 +71,13 @@ func (x *ff3Encrypter) CryptBlocks(dst, src []byte) {
 	var n = len(numeralString)
 
 	if n < minInputLenFF3 || n > maxLength(radix) {
-		panic("FF3Encrypter/CryptBlocks: input length not supported.")
+		panic("FF3Encrypter/CryptBlocks: src length not supported.")
 	}
 	if math.Pow(float64(radix), float64(n)) < 100 {
-		panic("FF3Encrypter/CryptBlocks: input length too short.")
+		panic("FF3Encrypter/CryptBlocks: radix^len < 100.")
 	}
-	if len(dst) < len(numeralString) {
-		panic("FF3Encrypter/CryptBlocks: output smaller than input.")
+	if len(dst) != len(src) {
+		panic("FF3Encrypter/CryptBlocks: src and dst size must be equal.")
 	}
 	if !isNumeralStringValid(numeralString, radix) {
 		panic("FF3Encrypter/CryptBlocks: numeral string not valid.")
@@ -121,6 +121,13 @@ func (x *ff3Encrypter) SetTweak(tweak []byte) {
 	copy(x.tweak, tweak)
 }
 
+func (x *ff3Encrypter) SetRadix(radix uint32) {
+	if radix < minRadixFF3 || radix > maxRadixFF3 {
+		panic(fmt.Sprintf("FF3Encrypter/SetRadix: radix must be in [%d..%d].", minRadixFF3, maxRadixFF3))
+	}
+	x.radix = radix
+}
+
 type ff3Decrypter ff3
 
 // NewFF3Decrypter returns a FpeMode which decrypts in FF3 mode, using the given
@@ -149,13 +156,13 @@ func (x *ff3Decrypter) CryptBlocks(dst, src []byte) {
 	var n = len(numeralString)
 
 	if n < minInputLenFF3 || n > maxLength(radix) {
-		panic("FF3Decrypter/CryptBlocks: input length not supported.")
+		panic("FF3Decrypter/CryptBlocks: src length not supported.")
 	}
 	if math.Pow(float64(radix), float64(n)) < 100 {
-		panic("FF3Decrypter/CryptBlocks: input length too short.")
+		panic("FF3Decrypter/CryptBlocks: radix^len < 100.")
 	}
-	if len(dst) < len(src) {
-		panic("FF3Decrypter/CryptBlocks: output smaller than input.")
+	if len(dst) != len(src) {
+		panic("FF3Decrypter/CryptBlocks: src and dst size must be equal.")
 	}
 	if !isNumeralStringValid(numeralString, radix) {
 		panic("FF3Decrypter/CryptBlocks: numeral string not valid.")
@@ -197,6 +204,13 @@ func (x *ff3Decrypter) SetTweak(tweak []byte) {
 		panic(fmt.Sprintf("FF3Decrypter/SetTweak: tweak must be %d bytes.", tweakLenFF3))
 	}
 	copy(x.tweak, tweak)
+}
+
+func (x *ff3Decrypter) SetRadix(radix uint32) {
+	if radix < minRadixFF3 || radix > maxRadixFF3 {
+		panic(fmt.Sprintf("FF3Decrypter/SetRadix: radix must be in [%d..%d].", minRadixFF3, maxRadixFF3))
+	}
+	x.radix = radix
 }
 
 // maxLength takes an integer radix. It returns the maximum length of the input numeral string

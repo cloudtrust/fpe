@@ -4,8 +4,8 @@ import (
 	"testing"
 	"bytes"
 	"math/big"
-	"reflect"
 	"math/rand"
+	"time"
 )
 const (
 	nbrTests = 1000
@@ -37,7 +37,7 @@ func TestStrMRadix(t *testing.T) {
 	var expected = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	var result = strMRadix(10, 10, x)
 
-	if !reflect.DeepEqual(result, expected) {
+	if !compareNumeralString(result, expected) {
 		t.Errorf("%s:\nhave %d\nwant %d", t.Name(), result, expected)
 	}
 	// Test corner cases
@@ -64,7 +64,7 @@ func TestRev(t *testing.T) {
 	var expected = []uint16{10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}
 	var result = rev(x)
 
-	if !reflect.DeepEqual(result, expected) {
+	if !compareNumeralString(result, expected) {
 		t.Errorf("%s:\nhave %d\nwant %d", t.Name(), result, expected)
 	}
 }
@@ -148,7 +148,7 @@ func TestBytesToNumeralString(t *testing.T) {
 	var expected = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	var result = BytesToNumeralString(x)
 
-	if !reflect.DeepEqual(result, expected) {
+	if !compareNumeralString(result, expected) {
 		t.Errorf("%s:\nhave %x\nwant %x", t.Name(), result, expected)
 	}
 
@@ -171,13 +171,14 @@ func TestBytesToNumeralString(t *testing.T) {
 }
 
 func TestConversions(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < nbrTests; i++ {
 		var l = int(rand.Uint32() % 2000) + 10
 		var radix = (rand.Uint32() % (maxRadixFF1-10)) + 10
 		var x = generateRandomNumeralString(radix, l)
 		var result = BytesToNumeralString(NumeralStringToBytes(x))
 
-		if !reflect.DeepEqual(result, x) {
+		if !compareNumeralString(result, x) {
 			t.Errorf("%s:\nhave %x\nwant %x", t.Name(), result, x)
 		}
 	}
@@ -185,8 +186,27 @@ func TestConversions(t *testing.T) {
 
 func generateRandomNumeralString(radix uint32, len int) ([]uint16) {
 	var out = make([]uint16, len)
+	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < len; i++ {
 		out[i] = uint16(rand.Uint32() % radix)
 	}
 	return out
+}
+
+func compareNumeralString(a, b []uint16) (bool) {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
