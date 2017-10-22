@@ -2518,6 +2518,7 @@ func TestFF3Decrypter(t *testing.T) {
 func TestSetFF3Tweak (t *testing.T) {
 	var key = make([]byte, ff3DefaultKeySize)
 	var tweak = make([]byte, tweakLenFF3)
+	rand.Seed(time.Now().UnixNano())
 
 	type fpeWithSetTweak interface {
 		cipher.BlockMode
@@ -2575,6 +2576,7 @@ func TestSetFF3Tweak (t *testing.T) {
 func TestSetFF3Radix (t *testing.T) {
 	var key = make([]byte, ff3DefaultKeySize)
 	var tweak = make([]byte, tweakLenFF3)
+	rand.Seed(time.Now().UnixNano())
 
 	type fpeWithSetRadix interface {
 		cipher.BlockMode
