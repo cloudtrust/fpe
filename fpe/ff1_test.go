@@ -12,8 +12,8 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"math/big"
-	"reflect"
 	"math/rand"
+	"time"
 )
 
 const (
@@ -21,16 +21,19 @@ const (
 )
 
 // Common values for tests.
-var commonInput1 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-var commonInput2 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}
-var commonTweak1 = []byte{0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30}
-var commonTweak2 = []byte{0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72, 0x73, 0x37, 0x37, 0x37}
-var commonKey128 = []byte{0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c}
-var commonKey192 = []byte{
+var ff1DefaultTweakSize = 16
+var ff1DefaultKeySize = 16
+var ff1DefaultRadix = 10
+var ff1CommonInput1 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+var ff1CommonInput2 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}
+var ff1CommonTweak1 = []byte{0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30}
+var ff1CommonTweak2 = []byte{0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72, 0x73, 0x37, 0x37, 0x37}
+var ff1CommonKey128 = []byte{0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c}
+var ff1CommonKey192 = []byte{
 	0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
 	0xef, 0x43, 0x59, 0xd8, 0xd5, 0x80, 0xaa, 0x4f,
 }
-var commonKey256 = []byte{
+var ff1CommonKey256 = []byte{
 	0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
 	0xef, 0x43, 0x59, 0xd8, 0xd5, 0x80, 0xaa, 0x4f, 0x7f, 0x03, 0x6d, 0x6f, 0x04, 0xfc, 0x6a, 0x94,
 }
@@ -67,14 +70,14 @@ var ff1Tests = []struct {
 	// FF1 samples: http://csrc.nist.gov/groups/ST/toolkit/documents/Examples/FF1samples.pdf.
 	{
 		"Sample #1",
-		commonKey128,
+		ff1CommonKey128,
 		10,
 		[]byte{},
-		commonInput1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 0},
@@ -306,14 +309,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #2",
-		commonKey128,
+		ff1CommonKey128,
 		10,
-		commonTweak1,
-		commonInput1,
+		ff1CommonTweak1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 10},
@@ -545,14 +548,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #3",
-		commonKey128,
+		ff1CommonKey128,
 		36,
-		commonTweak2,
-		commonInput2,
+		ff1CommonTweak2,
+		ff1CommonInput2,
 		9,
 		10,
-		commonInput2[:9],
-		commonInput2[9:],
+		ff1CommonInput2[:9],
+		ff1CommonInput2[9:],
 		7,
 		12,
 		[]byte{1, 2, 1, 0, 0, 36, 10, 9, 0, 0, 0, 19, 0, 0, 0, 11},
@@ -782,14 +785,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #4",
-		commonKey192,
+		ff1CommonKey192,
 		10,
 		[]byte{},
-		commonInput1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 0},
@@ -1022,14 +1025,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #5",
-		commonKey192,
+		ff1CommonKey192,
 		10,
-		commonTweak1,
-		commonInput1,
+		ff1CommonTweak1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 10},
@@ -1261,14 +1264,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #6",
-		commonKey192,
+		ff1CommonKey192,
 		36,
-		commonTweak2,
-		commonInput2,
+		ff1CommonTweak2,
+		ff1CommonInput2,
 		9,
 		10,
-		commonInput2[:9],
-		commonInput2[9:],
+		ff1CommonInput2[:9],
+		ff1CommonInput2[9:],
 		7,
 		12,
 		[]byte{1, 2, 1, 0, 0, 36, 10, 9, 0, 0, 0, 19, 0, 0, 0, 11},
@@ -1500,14 +1503,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #7",
-		commonKey256,
+		ff1CommonKey256,
 		10,
 		[]byte{},
-		commonInput1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 0},
@@ -1739,14 +1742,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #8",
-		commonKey256,
+		ff1CommonKey256,
 		10,
-		commonTweak1,
-		commonInput1,
+		ff1CommonTweak1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 10},
@@ -1978,14 +1981,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #9",
-		commonKey256,
+		ff1CommonKey256,
 		36,
-		commonTweak2,
-		commonInput2,
+		ff1CommonTweak2,
+		ff1CommonInput2,
 		9,
 		10,
-		commonInput2[:9],
-		commonInput2[9:],
+		ff1CommonInput2[:9],
+		ff1CommonInput2[9:],
 		7,
 		12,
 		[]byte{1, 2, 1, 0, 0, 36, 10, 9, 0, 0, 0, 19, 0, 0, 0, 11},
@@ -2219,7 +2222,7 @@ var ff1Tests = []struct {
 
 func getBigInt(s string) (big.Int) {
 	var x = big.NewInt(0)
-	x, success := x.SetString(s, 10)
+	x, success := x.SetString(s, ff1DefaultRadix)
 	if success == false {
 		panic("getBigInt: Cannot create Big integer")
 	}
@@ -2228,9 +2231,10 @@ func getBigInt(s string) (big.Int) {
 
 // This test check that the function SetTweak of the FF1Encrypter and FF1Decrypter works correctly.
 func TestSetFF1Tweak (t *testing.T) {
-	var key = make([]byte, 16)
-	var tweak = make([]byte, 16)
-	var iv = make([]byte, 16)
+	var key = make([]byte, ff1DefaultKeySize)
+	var tweak = make([]byte, ff1DefaultTweakSize)
+	var iv = make([]byte, blockSizeFF1)
+	rand.Seed(time.Now().UnixNano())
 
 	type fpeWithSetTweak interface {
 		cipher.BlockMode
@@ -2243,16 +2247,19 @@ func TestSetFF1Tweak (t *testing.T) {
 	}
 
 	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
-	var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, 10)
+	var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, uint32(ff1DefaultRadix))
 
 	var fpeIV, ok = encrypter.(fpeWithSetTweak)
 	if !ok {
 		t.Errorf("%s: FF1Encrypter has no SetTweak function", t.Name())
 	}
-
-	var plaintext = make([]byte, 100)
-	var ciphertext = make([]byte, 100)
-	var ciphertext2 = make([]byte, 100)
+	// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
+	// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
+	// upper bound to 400 for performance reasons.
+	var l = int(rand.Uint32() % 394) + 7
+	var plaintext = make([]byte, l)
+	var ciphertext = make([]byte, l)
+	var ciphertext2 = make([]byte, l)
 	fpeIV.CryptBlocks(ciphertext, plaintext)
 	// Modify tweak.
 	tweak[0] ^= 0xff
@@ -2263,15 +2270,15 @@ func TestSetFF1Tweak (t *testing.T) {
 		t.Errorf("%s: changing the tweak should change the ciphertext", t.Name())
 	}
 
-	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, 10)
+	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, uint32(ff1DefaultRadix))
 
 	fpeIV, ok = decrypter.(fpeWithSetTweak)
 	if !ok {
 		t.Errorf("%s: FF1Decrypter has no SetTweak function", t.Name())
 	}
-	plaintext = make([]byte, 100)
-	ciphertext = make([]byte, 100)
-	ciphertext2 = make([]byte, 100)
+	plaintext = make([]byte, l)
+	ciphertext = make([]byte, l)
+	ciphertext2 = make([]byte, l)
 	fpeIV.CryptBlocks(ciphertext, plaintext)
 	// Modify tweak.
 	tweak[0] ^= 0xff
@@ -2280,6 +2287,74 @@ func TestSetFF1Tweak (t *testing.T) {
 
 	if bytes.Equal(ciphertext, ciphertext2) {
 		t.Errorf("%s: changing the tweak must change the ciphertext", t.Name())
+	}
+}
+
+// This test check that the function SetRadix of the FF1Encrypter and FF1Decrypter works correctly.
+func TestSetFF1Radix (t *testing.T) {
+	var key = make([]byte, ff1DefaultKeySize)
+	var tweak = make([]byte, ff1DefaultTweakSize)
+	var iv = make([]byte, blockSizeFF1)
+	rand.Seed(time.Now().UnixNano())
+
+	type fpeWithSetRadix interface {
+		cipher.BlockMode
+		SetRadix(uint32)
+	}
+
+	var aesBlock, err = aes.NewCipher(key)
+	if err != nil {
+		t.Errorf("%s: NewCipher = %s", t.Name(), err)
+	}
+
+	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
+
+	// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
+	// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
+	// upper bound to 400 for performance reasons.
+	var l = int(rand.Uint32() % 394) + 7
+	var plaintextRadix10 = generateRandomNumeralString(10, l)
+	var plaintextRadix20 = generateRandomNumeralString(20, l)
+	var plaintextBytes = make([]byte, 2*len(plaintextRadix10))
+	var ciphertextBytes = make([]byte, 2*len(plaintextRadix10))
+	var ciphertextRadix10 = make([]uint16, len(plaintextRadix10))
+	var ciphertextRadix20 = make([]uint16, len(plaintextRadix20))
+	var decryptedRadix10 = make([]uint16, len(plaintextRadix10))
+	var decryptedRadix20 = make([]uint16, len(plaintextRadix20))
+
+	// Encipher plaintext with radix 10
+	var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, 10)
+	var encrypterWithSetRadix, ok = encrypter.(fpeWithSetRadix)
+	if !ok {
+		t.Errorf("%s: FF1Encrypter has no SetRadix function", t.Name())
+	}
+	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextRadix10))
+	ciphertextRadix10 = BytesToNumeralString(ciphertextBytes)
+
+	// Change radix to 20, then encipher plaintext with radix 20
+	encrypterWithSetRadix.SetRadix(uint32(20))
+	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextRadix20))
+	ciphertextRadix20 = BytesToNumeralString(ciphertextBytes)
+
+	// Decipher ciphertext with radix 10
+	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, 10)
+	var decrypterWithSetRadix, okDec = decrypter.(fpeWithSetRadix)
+	if !okDec {
+		t.Errorf("%s: FF1Decrypter has no SetRadix function", t.Name())
+	}
+	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextRadix10))
+	decryptedRadix10 = BytesToNumeralString(plaintextBytes)
+
+	// Change radix to 20, then decipher ciphertext with radix 20
+	decrypterWithSetRadix.SetRadix(uint32(20))
+	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextRadix20))
+	decryptedRadix20 = BytesToNumeralString(plaintextBytes)
+
+	if !compareNumeralString(plaintextRadix10, decryptedRadix10) {
+		t.Errorf("%s:\nhave %x\nwant %x", t.Name(), plaintextRadix10, ciphertextRadix10)
+	}
+	if !compareNumeralString(plaintextRadix20, decryptedRadix20) {
+		t.Errorf("%s:\nhave %x\nwant %x", t.Name(), plaintextRadix20, ciphertextRadix20)
 	}
 }
 
@@ -2375,7 +2450,7 @@ func TestPrf(t *testing.T) {
 			continue
 		}
 
-		var iv = make([]byte, 16)
+		var iv = make([]byte, blockSizeFF1)
 		var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
 		var cbcModeWithSetIV, ok = cbcMode.(cbcWithSetIV)
 		if !ok {
@@ -2511,20 +2586,24 @@ func TestGetC(t *testing.T) {
 // the decrypted result matches the original plaintext.
 func TestFF1EncryptionDecryption(t *testing.T) {
 	for i := 0; i < nbrFF1Tests; i++ {
-		var key = make([]byte, 16)
+		rand.Seed(time.Now().UnixNano())
+		var key = make([]byte, ff1DefaultKeySize)
 		rand.Read(key)
-		var tweak = make([]byte, 16)
+		var tweak = make([]byte, ff1DefaultTweakSize)
 		rand.Read(tweak)
-		var radix = (rand.Uint32() % (maxRadixFF1-10)) + 10
-		var l = int(rand.Uint32() % 400) + 10
-
+		// Chose random radix between minRadixFF1 and maxRadixFF1
+		var radix = (rand.Uint32() % (maxRadixFF1-minRadixFF1)) + minRadixFF1
+		// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
+		// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
+		// upper bound to 400 for performance reasons.
+		var l = int(rand.Uint32() % 394) + 7
 		var aesBlock, err = aes.NewCipher(key)
 		if err != nil {
 			t.Errorf("%s: NewCipher = %s", t.Name(), err)
 			continue
 		}
 
-		var iv = make([]byte, 16)
+		var iv = make([]byte, blockSizeFF1)
 		var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
 		var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
 		var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
@@ -2541,16 +2620,17 @@ func TestFF1EncryptionDecryption(t *testing.T) {
 		decrypter.CryptBlocks(dst, src)
 		var decrypted = BytesToNumeralString(dst)
 
-		if !reflect.DeepEqual(plaintext, decrypted) {
+		if !compareNumeralString(plaintext, decrypted) {
 			t.Errorf("%s l=%d, radix=%d, key=%x, tweak=%x:\nhave %d\nwant %d", t.Name(), l, radix, key, tweak, decrypted, plaintext)
 		}
 	}
 }
 
 func TestFF1CornerCases(t *testing.T) {
-	var key = make([]byte, 16)
+	rand.Seed(time.Now().UnixNano())
+	var key = make([]byte, ff1DefaultKeySize)
 	rand.Read(key)
-	var tweak = make([]byte, 16)
+	var tweak = make([]byte, ff1DefaultTweakSize)
 	rand.Read(tweak)
 
 	var aesBlock, err = aes.NewCipher(key)
@@ -2559,8 +2639,11 @@ func TestFF1CornerCases(t *testing.T) {
 	}
 
 	var radix = uint32(maxRadixFF1)
-	var l = 100
-	var iv = make([]byte, 16)
+	// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
+	// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
+	// upper bound to 400 for performance reasons.
+	var l = int(rand.Uint32() % 394) + 7
+	var iv = make([]byte, blockSizeFF1)
 	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
 	var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
 	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
@@ -2580,7 +2663,7 @@ func TestFF1CornerCases(t *testing.T) {
 	decrypter.CryptBlocks(dst, src)
 	var decrypted = BytesToNumeralString(dst)
 
-	if !reflect.DeepEqual(plaintext, decrypted) {
+	if !compareNumeralString(plaintext, decrypted) {
 		t.Errorf("%s l=%d, radix=%d, key=%x, tweak=%x:\nhave %d\nwant %d", t.Name(), l, radix, key, tweak, decrypted, plaintext)
 	}
 }
