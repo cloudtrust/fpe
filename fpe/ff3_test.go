@@ -11,9 +11,9 @@ import (
 	"crypto/aes"
 	"math/big"
 	"math/rand"
-	"bytes"
 	"crypto/cipher"
 	"time"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -2438,6 +2438,122 @@ var ff3Tests = []struct {
 	},
 }
 
+// Test input validation of NewFF3Encrypter
+func TestNewFF3Encrypter(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	var key = make([]byte, ff3DefaultKeySize)
+	rand.Read(key)
+
+	var aesBlock, err = aes.NewCipher(key)
+	assert.Nil(t, err)
+
+	// Invalid tweak length
+	var f func()
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF3)
+		var tweak = make([]byte, tweakLenFF3 + 1)
+		rand.Read(tweak)
+		NewFF3Encrypter(aesBlock, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid radix
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF3 + 1)
+		var tweak = make([]byte, tweakLenFF3)
+		rand.Read(tweak)
+		NewFF3Encrypter(aesBlock, tweak, radix)
+	}
+	assert.Panics(t, f)
+}
+
+// Test input validation of NewFF3Decrypter
+func TestNewFF3Decrypter(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	var key = make([]byte, ff3DefaultKeySize)
+	rand.Read(key)
+
+	var aesBlock, err = aes.NewCipher(key)
+	assert.Nil(t, err)
+
+	// Invalid tweak length
+	var f func()
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF3)
+		var tweak = make([]byte, tweakLenFF3 + 1)
+		rand.Read(tweak)
+		NewFF3Decrypter(aesBlock, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid radix
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF3 + 1)
+		var tweak = make([]byte, tweakLenFF3)
+		rand.Read(tweak)
+		NewFF3Decrypter(aesBlock, tweak, radix)
+	}
+	assert.Panics(t, f)
+}
+
+// Test input validation of Crypt method for FF3 encrypter and decrypter
+func TestFF3CryptBlocks(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	var key = make([]byte, ff3DefaultKeySize)
+	rand.Read(key)
+	var tweak = make([]byte, tweakLenFF3)
+	rand.Read(tweak)
+	var radix uint32 = minRadixFF3
+
+	var aesBlock, err = aes.NewCipher(key)
+	assert.Nil(t, err)
+
+	var ff3BlockMode []BlockMode = []BlockMode{NewFF3Encrypter(aesBlock, tweak, radix), NewFF3Decrypter(aesBlock, tweak, radix)}
+
+	for _, ff3 := range ff3BlockMode {
+
+		// Test invalid input length
+		var f func()
+		f = func() {
+			// 1 is smaller than minInputLenFF3
+			var numStr= make([]uint16, 1)
+			var b= NumeralStringToBytes(numStr)
+			ff3.CryptBlocks(b, b)
+		}
+		assert.Panics(t, f)
+
+		// Test radix^len < 100
+		f = func() {
+			// minInputLenFF3 < 5 and radix^len < 100
+			var numStr= make([]uint16, 5)
+			var b= NumeralStringToBytes(numStr)
+			ff3.CryptBlocks(b, b)
+		}
+		assert.Panics(t, f)
+
+		// Test len(dst) != len(src)
+		f = func() {
+			// minInputLenFF3 < 10 and radix^len > 100
+			var numStr= make([]uint16, 10)
+			var b= NumeralStringToBytes(numStr)
+			var dst= make([]byte, len(b)+1)
+			ff3.CryptBlocks(dst, b)
+		}
+		assert.Panics(t, f)
+
+		// Test invalid numeral string
+		f = func() {
+			var validLength= 10
+			var numStr= make([]uint16, validLength)
+			assert.Equal(t, radix, uint32(2))
+			numStr[0] = 3 // invalid for radix 2
+			var b= NumeralStringToBytes(numStr)
+			ff3.CryptBlocks(b, b)
+		}
+		assert.Panics(t, f)
+	}
+}
+
 // This test uses the NIST test vectors to validate the FF3 encryption. Here we only
 // check that the output is correct for both in place and not in place encryption.
 func TestFF3Encrypter(t *testing.T) {
@@ -2445,10 +2561,7 @@ func TestFF3Encrypter(t *testing.T) {
 		// The NIST standard require to reverse the key bytes for FF3.
 		var key = RevB(test.key)
 		var aesBlock, err = aes.NewCipher(key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
+		assert.Nil(t, err)
 
 		var encrypter = NewFF3Encrypter(aesBlock, test.tweak, test.radix)
 
@@ -2457,9 +2570,7 @@ func TestFF3Encrypter(t *testing.T) {
 		encrypter.CryptBlocks(dataInPlace, dataInPlace)
 		var resultInPlace = BytesToNumeralString(dataInPlace)
 
-		if !compareNumeralString(test.out, resultInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultInPlace, test.out)
-		}
+		assert.Equal(t, test.out, resultInPlace)
 
 		// Encrypt not in place.
 		var dataSrc = NumeralStringToBytes(test.in)
@@ -2467,12 +2578,8 @@ func TestFF3Encrypter(t *testing.T) {
 		encrypter.CryptBlocks(dataDst, dataSrc)
 		var resultNotInPlace = BytesToNumeralString(dataDst)
 
-		if !bytes.Equal(dataSrc, NumeralStringToBytes(test.in)) {
-			t.Errorf("%s(%s): input data should not be modified", t.Name(), test.name)
-		}
-		if !compareNumeralString(test.out, resultNotInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultNotInPlace, test.out)
-		}
+		assert.Equal(t, dataSrc, NumeralStringToBytes(test.in))
+		assert.Equal(t, test.out, resultNotInPlace)
 	}
 }
 
@@ -2483,10 +2590,7 @@ func TestFF3Decrypter(t *testing.T) {
 		// The NIST standard require to reverse the key bytes for FF3.
 		var key = RevB(test.key)
 		var aesBlock, err = aes.NewCipher(key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
+		assert.Nil(t, err)
 
 		var decrypter = NewFF3Decrypter(aesBlock, test.tweak, test.radix)
 
@@ -2495,9 +2599,7 @@ func TestFF3Decrypter(t *testing.T) {
 		decrypter.CryptBlocks(dataInPlace, dataInPlace)
 		var resultInPlace = BytesToNumeralString(dataInPlace)
 
-		if !compareNumeralString(test.in, resultInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultInPlace, test.in)
-		}
+		assert.Equal(t, test.in, resultInPlace)
 
 		// Decrypt not in place.
 		var dataSrc = NumeralStringToBytes(test.out)
@@ -2505,20 +2607,18 @@ func TestFF3Decrypter(t *testing.T) {
 		decrypter.CryptBlocks(dataDst, dataSrc)
 		var resultNotInPlace = BytesToNumeralString(dataDst)
 
-		if !bytes.Equal(dataSrc, NumeralStringToBytes(test.out)) {
-			t.Errorf("%s(%s): input data should not be modified", t.Name(), test.name)
-		}
-		if !compareNumeralString(test.in, resultNotInPlace) {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, resultNotInPlace, test.in)
-		}
+		assert.Equal(t, dataSrc, NumeralStringToBytes(test.out))
+		assert.Equal(t, test.in, resultNotInPlace)
 	}
 }
 
 // This test check that the function SetTweak of the FF3Encrypter and FF3Decrypter works correctly.
 func TestSetFF3Tweak (t *testing.T) {
-	var key = make([]byte, ff3DefaultKeySize)
-	var tweak = make([]byte, tweakLenFF3)
 	rand.Seed(time.Now().UnixNano())
+	var key = make([]byte, ff3DefaultKeySize)
+	rand.Read(key)
+	var tweak = make([]byte, tweakLenFF3)
+	rand.Read(tweak)
 
 	type fpeWithSetTweak interface {
 		cipher.BlockMode
@@ -2526,57 +2626,70 @@ func TestSetFF3Tweak (t *testing.T) {
 	}
 
 	var aesBlock, err = aes.NewCipher(key)
-	if err != nil {
-		t.Errorf("%s: NewCipher = %s", t.Name(), err)
-	}
+	assert.Nil(t, err)
 
+	// FF3 Encrypter
 	var encrypter = NewFF3Encrypter(aesBlock, tweak, uint32(ff3DefaultRadix))
 
-	var fpeIV, ok = encrypter.(fpeWithSetTweak)
-	if !ok {
-		t.Errorf("%s: FF3Encrypter has no SetTweak function", t.Name())
-	}
-	// We take inputs length at random between 7 and maxlen(radix)(see ff3.go). We set the lower bound to 7 so
-	// we always satisfy the condition radix^len >= 100 (minRadix = 2).
-	var l = int(rand.Uint32() % uint32(maxLength(uint32(ff3DefaultRadix)) - 7)) + 7
-	var plaintext = make([]byte, l)
-	var ciphertext = make([]byte, l)
-	var ciphertext2 = make([]byte, l)
-	fpeIV.CryptBlocks(ciphertext, plaintext)
-	// Modify tweak.
-	tweak[0] ^= 0xff
-	fpeIV.SetTweak(tweak)
-	fpeIV.CryptBlocks(ciphertext2, plaintext)
-
-	if bytes.Equal(ciphertext, ciphertext2) {
-		t.Errorf("%s: changing the tweak should change the ciphertext", t.Name())
+	var encWithSetTweak fpeWithSetTweak
+	{
+		var ok bool
+		encWithSetTweak, ok = encrypter.(fpeWithSetTweak)
+		assert.True(t, ok)
+		assert.NotNil(t, encWithSetTweak)
 	}
 
+	// Set valid tweak
+	var f func()
+	f = func()  {
+		var tweak = make([]byte, tweakLenFF3)
+		encWithSetTweak.SetTweak(tweak)
+	}
+	assert.NotPanics(t, f)
+
+	// Set invalid tweak
+	f = func()  {
+		var tweak = make([]byte, tweakLenFF3+1)
+		encWithSetTweak.SetTweak(tweak)
+	}
+	assert.Panics(t, f)
+
+	// FF3 Decrypter
 	var decrypter = NewFF3Decrypter(aesBlock, tweak, uint32(ff3DefaultRadix))
 
-	fpeIV, ok = decrypter.(fpeWithSetTweak)
-	if !ok {
-		t.Errorf("%s: FF3Decrypter has no SetTweak function", t.Name())
+	var decWithSetTweak fpeWithSetTweak
+	{
+		var ok bool
+		decWithSetTweak, ok = decrypter.(fpeWithSetTweak)
+		assert.True(t, ok)
+		assert.NotNil(t, decWithSetTweak)
 	}
-	plaintext = make([]byte, l)
-	ciphertext = make([]byte, l)
-	ciphertext2 = make([]byte, l)
-	fpeIV.CryptBlocks(ciphertext, plaintext)
-	// Modify tweak.
-	tweak[0] ^= 0xff
-	fpeIV.SetTweak(tweak)
-	fpeIV.CryptBlocks(ciphertext2, plaintext)
 
-	if bytes.Equal(ciphertext, ciphertext2) {
-		t.Errorf("%s: changing the tweak must change the ciphertext", t.Name())
+	// Set valid tweak
+	f = func()  {
+		var tweak = make([]byte, tweakLenFF3)
+		decWithSetTweak.SetTweak(tweak)
 	}
+	assert.NotPanics(t, f)
+
+	// Set invalid tweak
+	f = func()  {
+		var tweak = make([]byte, tweakLenFF3+1)
+		decWithSetTweak.SetTweak(tweak)
+	}
+	assert.Panics(t, f)
 }
 
 // This test check that the function SetRadix of the FF3Encrypter and FF3Decrypter works correctly.
 func TestSetFF3Radix (t *testing.T) {
-	var key = make([]byte, ff3DefaultKeySize)
-	var tweak = make([]byte, tweakLenFF3)
 	rand.Seed(time.Now().UnixNano())
+	var key = make([]byte, ff3DefaultKeySize)
+	rand.Read(key)
+	var tweak = make([]byte, tweakLenFF3)
+	rand.Read(tweak)
+
+	var radix = uint32(rand.Intn(20) + minRadixFF3)
+	var otherRadix uint32 = radix + 10
 
 	type fpeWithSetRadix interface {
 		cipher.BlockMode
@@ -2584,56 +2697,69 @@ func TestSetFF3Radix (t *testing.T) {
 	}
 
 	var aesBlock, err = aes.NewCipher(key)
-	if err != nil {
-		t.Errorf("%s: NewCipher = %s", t.Name(), err)
-	}
+	assert.Nil(t, err)
 
 	// We take inputs length at random between 7 and maxlen(radix)(see ff3.go). We set the lower bound to 7 so
 	// we always satisfy the condition radix^len >= 100 (minRadix = 2).
 	var l = int(rand.Uint32() % uint32(maxLength(uint32(20)) - 7)) + 7
-	var plaintextRadix10 = generateRandomNumeralString(10, l)
-	var plaintextRadix20 = generateRandomNumeralString(20, l)
-	var plaintextBytes = make([]byte, 2*len(plaintextRadix10))
-	var ciphertextBytes = make([]byte, 2*len(plaintextRadix10))
-	var ciphertextRadix10 = make([]uint16, len(plaintextRadix10))
-	var ciphertextRadix20 = make([]uint16, len(plaintextRadix20))
-	var decryptedRadix10 = make([]uint16, len(plaintextRadix10))
-	var decryptedRadix20 = make([]uint16, len(plaintextRadix20))
+	var plaintextRadix = generateRandomNumeralString(radix, l)
+	var plaintextOtherRadix = generateRandomNumeralString(otherRadix, l)
+	var plaintextBytes = make([]byte, 2*len(plaintextRadix))
+	var ciphertextBytes = make([]byte, 2*len(plaintextRadix))
+	var ciphertextRadix = make([]uint16, len(plaintextRadix))
+	var ciphertextOtherRadix = make([]uint16, len(plaintextOtherRadix))
+	var decryptedRadix = make([]uint16, len(plaintextRadix))
+	var decryptedOtherRadix = make([]uint16, len(plaintextOtherRadix))
 
-	// Encipher plaintext with radix 10
-	var encrypter = NewFF3Encrypter(aesBlock, tweak, 10)
-	var encrypterWithSetRadix, ok = encrypter.(fpeWithSetRadix)
-	if !ok {
-		t.Errorf("%s: FF3Encrypter has no SetRadix function", t.Name())
+	// Encipher plaintext
+	var encrypter = NewFF3Encrypter(aesBlock, tweak, radix)
+	var encrypterWithSetRadix fpeWithSetRadix
+	{
+		var ok bool
+		encrypterWithSetRadix, ok = encrypter.(fpeWithSetRadix)
+		assert.True(t, ok)
 	}
-	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextRadix10))
-	ciphertextRadix10 = BytesToNumeralString(ciphertextBytes)
+	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextRadix))
+	ciphertextRadix = BytesToNumeralString(ciphertextBytes)
 
-	// Change radix to 20, then encipher plaintext with radix 20
-	encrypterWithSetRadix.SetRadix(uint32(20))
-	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextRadix20))
-	ciphertextRadix20 = BytesToNumeralString(ciphertextBytes)
+	// Change radix to otherRadix, then encipher
+	encrypterWithSetRadix.SetRadix(otherRadix)
+	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextOtherRadix))
+	ciphertextOtherRadix = BytesToNumeralString(ciphertextBytes)
 
-	// Decipher ciphertext with radix 10
-	var decrypter = NewFF3Decrypter(aesBlock, tweak, 10)
-	var decrypterWithSetRadix, okDec = decrypter.(fpeWithSetRadix)
-	if !okDec {
-		t.Errorf("%s: FF3Decrypter has no SetRadix function", t.Name())
+	// Decipher ciphertext
+	var decrypter = NewFF3Decrypter(aesBlock, tweak, radix)
+	var decrypterWithSetRadix fpeWithSetRadix
+	{
+		var ok bool
+		decrypterWithSetRadix, ok = decrypter.(fpeWithSetRadix)
+		assert.True(t, ok)
+
 	}
-	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextRadix10))
-	decryptedRadix10 = BytesToNumeralString(plaintextBytes)
+	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextRadix))
+	decryptedRadix = BytesToNumeralString(plaintextBytes)
 
-	// Change radix to 20, then decipher ciphertext with radix 20
-	decrypterWithSetRadix.SetRadix(uint32(20))
-	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextRadix20))
-	decryptedRadix20 = BytesToNumeralString(plaintextBytes)
+	// Change radix to otherRadix, then decipher
+	decrypterWithSetRadix.SetRadix(otherRadix)
+	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextOtherRadix))
+	decryptedOtherRadix = BytesToNumeralString(plaintextBytes)
 
-	if !compareNumeralString(plaintextRadix10, decryptedRadix10) {
-		t.Errorf("%s:\nhave %x\nwant %x", t.Name(), plaintextRadix10, ciphertextRadix10)
+	assert.Equal(t, plaintextRadix, decryptedRadix)
+	assert.Equal(t, plaintextOtherRadix, decryptedOtherRadix)
+
+	// Set invalid radix
+	var f func()
+	f = func()  {
+		var radix = uint32(maxRadixFF3+1)
+		encrypterWithSetRadix.SetRadix(radix)
 	}
-	if !compareNumeralString(plaintextRadix20, decryptedRadix20) {
-		t.Errorf("%s:\nhave %x\nwant %x", t.Name(), plaintextRadix20, ciphertextRadix20)
+	assert.Panics(t, f)
+
+	f = func()  {
+		var radix = uint32(maxRadixFF3+1)
+		decrypterWithSetRadix.SetRadix(radix)
 	}
+	assert.Panics(t, f)
 }
 
 // This test uses the NIST test vectors to validate the p value for each encryption and decryption round.
@@ -2658,9 +2784,7 @@ func TestGetFF3P(t *testing.T) {
 			// The x value is the numeral string b from the previous round.
 			x = round.b
 
-			if !bytes.Equal(p, expectedP) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, p, expectedP)
-			}
+			assert.Equal(t, p, expectedP)
 		}
 
 		// For the first decryption round, the x value is the left half of the output numeral string.
@@ -2680,9 +2804,7 @@ func TestGetFF3P(t *testing.T) {
 			// The x value is the numeral string a from the previous round.
 			x = round.a
 
-			if !bytes.Equal(p, expectedP) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, p, expectedP)
-			}
+			assert.Equal(t, p, expectedP)
 		}
 	}
 }
@@ -2691,10 +2813,7 @@ func TestGetFF3P(t *testing.T) {
 func TestGetFF3S(t *testing.T) {
 	for _, test := range ff3Tests {
 		var aesBlock, err = aes.NewCipher(RevB(test.key))
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
+		assert.Nil(t, err)
 
 		// Iter over each encryption round.
 		var rounds = test.encRounds
@@ -2703,9 +2822,7 @@ func TestGetFF3S(t *testing.T) {
 			var expectedS = round.s
 			var s = getFF3S(p, aesBlock)
 
-			if !bytes.Equal(s, expectedS) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, s, expectedS)
-			}
+			assert.Equal(t, s, expectedS)
 		}
 
 		// Iter over each decryption round.
@@ -2715,9 +2832,7 @@ func TestGetFF3S(t *testing.T) {
 			var expectedS = round.s
 			var s = getFF3S(p, aesBlock)
 
-			if !bytes.Equal(s, expectedS) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x",t.Name(), test.name, round.name, s, expectedS)
-			}
+			assert.Equal(t, s, expectedS)
 		}
 	}
 }
@@ -2732,9 +2847,7 @@ func TestGetFF3Y(t *testing.T) {
 			var expectedY = &round.y
 			var y = num(s)
 
-			if y.Cmp(expectedY) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, y.String(), expectedY.String())
-			}
+			assert.Equal(t, y, expectedY)
 		}
 
 		// Iter over each decryption round.
@@ -2744,9 +2857,7 @@ func TestGetFF3Y(t *testing.T) {
 			var expectedY = &round.y
 			var y = num(s)
 
-			if y.Cmp(expectedY) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, y.String(), expectedY.String())
-			}
+			assert.Equal(t, y, expectedY)
 		}
 	}
 }
@@ -2774,9 +2885,7 @@ func TestGetFF3C(t *testing.T) {
 			// The x value is the numeral string a from the previous round.
 			x = round.a
 
-			if c.Cmp(expectedC) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, c.String(), expectedC.String())
-			}
+			assert.Equal(t, c, expectedC)
 		}
 
 		// For the first decryption round, the x value is the right half of the output numeral string.
@@ -2798,9 +2907,7 @@ func TestGetFF3C(t *testing.T) {
 			// The x value is the numeral string b from the previous round.
 			x = round.b
 
-			if c.Cmp(expectedC) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, c.String(), expectedC.String())
-			}
+			assert.Equal(t, c, expectedC)
 		}
 	}
 }
@@ -2821,10 +2928,7 @@ func TestFF3EncryptionDecryption(t *testing.T) {
 		var l = int(rand.Uint32() % uint32(maxLength(radix) - 7)) + 7
 
 		var aesBlock, err = aes.NewCipher(key)
-		if err != nil {
-			t.Errorf("%s: NewCipher = %s", t.Name(), err)
-			continue
-		}
+		assert.Nil(t, err)
 
 		var encrypter = NewFF3Encrypter(aesBlock, tweak, radix)
 		var decrypter = NewFF3Decrypter(aesBlock, tweak, radix)
@@ -2841,9 +2945,7 @@ func TestFF3EncryptionDecryption(t *testing.T) {
 		decrypter.CryptBlocks(dst, src)
 		var decrypted = BytesToNumeralString(dst)
 
-		if !compareNumeralString(plaintext, decrypted) {
-			t.Errorf("%s l=%d, radix=%d, key=%x, tweak=%x, input=%d:\nhave %d\nwant %d", t.Name(), l, radix, key, tweak, plaintext, decrypted, plaintext)
-		}
+		assert.Equal(t, plaintext, decrypted)
 	}
 }
 
@@ -2855,9 +2957,7 @@ func TestFF3CornerCases(t *testing.T) {
 	rand.Read(tweak)
 
 	var aesBlock, err = aes.NewCipher(key)
-	if err != nil {
-		t.Errorf("%s: NewCipher = %s", t.Name(), err)
-	}
+	assert.Nil(t, err)
 
 	var radix = uint32(maxRadixFF3)
 	var l = maxLength(radix)
@@ -2879,7 +2979,23 @@ func TestFF3CornerCases(t *testing.T) {
 	decrypter.CryptBlocks(dst, src)
 	var decrypted = BytesToNumeralString(dst)
 
-	if !compareNumeralString(plaintext, decrypted) {
-		t.Errorf("%s l=%d, radix=%d, key=%x, tweak=%x:\nhave %d\nwant %d", t.Name(), l, radix, key, tweak, decrypted, plaintext)
-	}
+	assert.Equal(t, plaintext, decrypted)
+}
+
+func TestFF3BlockSize(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	var key = make([]byte, ff3DefaultKeySize)
+	rand.Read(key)
+	var tweak = make([]byte, tweakLenFF3)
+	rand.Read(tweak)
+	var radix = uint32(rand.Intn(1000) + minRadixFF3)
+
+	var aesBlock, err = aes.NewCipher(key)
+	assert.Nil(t, err)
+
+	var encrypter = NewFF3Encrypter(aesBlock, tweak, radix)
+	assert.Equal(t, blockSizeFF3, encrypter.BlockSize())
+
+	var decrypter = NewFF3Decrypter(aesBlock, tweak, radix)
+	assert.Equal(t, blockSizeFF3, decrypter.BlockSize())
 }
