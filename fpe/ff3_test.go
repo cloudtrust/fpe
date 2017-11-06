@@ -2465,6 +2465,16 @@ func TestNewFF3Encrypter(t *testing.T) {
 		NewFF3Encrypter(aesBlock, tweak, radix)
 	}
 	assert.Panics(t, f)
+
+	// Invalid Block
+	var invalidBlock *mockBlock = &mockBlock{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF3)
+		var tweak = make([]byte, tweakLenFF3)
+		rand.Read(tweak)
+		NewFF3Encrypter(invalidBlock, tweak, radix)
+	}
+	assert.Panics(t, f)
 }
 
 // Test input validation of NewFF3Decrypter
@@ -2492,6 +2502,16 @@ func TestNewFF3Decrypter(t *testing.T) {
 		var tweak = make([]byte, tweakLenFF3)
 		rand.Read(tweak)
 		NewFF3Decrypter(aesBlock, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid Block
+	var invalidBlock *mockBlock = &mockBlock{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF3)
+		var tweak = make([]byte, tweakLenFF3)
+		rand.Read(tweak)
+		NewFF3Decrypter(invalidBlock, tweak, radix)
 	}
 	assert.Panics(t, f)
 }

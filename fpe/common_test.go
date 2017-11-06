@@ -205,6 +205,10 @@ func generateRandomNumeralString(radix uint32, len int) ([]uint16) {
 	return out
 }
 
-func compareNumeralString(a, b []uint16) bool {
-	return true
-}
+// Mock Block Cipher
+type mockBlock struct {}
+
+// Return a block size different from AES (16)
+func (c *mockBlock) BlockSize() int { return 10 }
+func (c *mockBlock) Encrypt(dst, src []byte) {}
+func (c *mockBlock) Decrypt(dst, src []byte) {}

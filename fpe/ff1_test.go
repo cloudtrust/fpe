@@ -2258,6 +2258,26 @@ func TestNewFF1Encrypter(t *testing.T) {
 		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
 	}
 	assert.Panics(t, f)
+
+	// Invalid Block
+	var invalidBlock *mockBlock = &mockBlock{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Encrypter(invalidBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid BlockMode
+	var invalidBlockMode *mockBlockMode = &mockBlockMode{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Encrypter(aesBlock, invalidBlockMode, tweak, radix)
+	}
+	assert.Panics(t, f)
 }
 
 // Test input validation of Crypt method for FF1 encrypter and decrypter
@@ -2349,6 +2369,26 @@ func TestNewFF1Decrypter(t *testing.T) {
 		var tweak = make([]byte, maxTweakLenFF1)
 		rand.Read(tweak)
 		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid Block
+	var invalidBlock *mockBlock = &mockBlock{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Decrypter(invalidBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid BlockMode
+	var invalidBlockMode *mockBlockMode = &mockBlockMode{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Decrypter(aesBlock, invalidBlockMode, tweak, radix)
 	}
 	assert.Panics(t, f)
 }
@@ -2858,3 +2898,10 @@ func TestFF1BlockSize(t *testing.T) {
 	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
 	assert.Equal(t, blockSizeFF1, decrypter.BlockSize())
 }
+
+// Mock BlockMode
+type mockBlockMode struct {}
+
+// Return a BlockMode without SetIv method
+func (c *mockBlockMode) BlockSize() int { return 16 }
+func (c *mockBlockMode) CryptBlocks(dst, src []byte) {}
