@@ -212,3 +212,15 @@ type mockBlock struct {}
 func (c *mockBlock) BlockSize() int { return 10 }
 func (c *mockBlock) Encrypt(dst, src []byte) {}
 func (c *mockBlock) Decrypt(dst, src []byte) {}
+
+// Generate random key, tweak an IV for the tests
+func getRandomParameters(keySize, tweakSize, ivSize int) (key, tweak, iv []byte) {
+	rand.Seed(time.Now().UnixNano())
+	key = make([]byte, keySize)
+	rand.Read(key)
+	tweak = make([]byte, tweakSize)
+	rand.Read(tweak)
+	iv = make([]byte, ivSize)
+	rand.Read(iv)
+	return
+}
