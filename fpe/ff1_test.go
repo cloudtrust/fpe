@@ -2600,7 +2600,6 @@ func TestGetQ(t *testing.T) {
 		// Iter over each decryption round.
 		for i, round := range test.decRounds {
 			var standardNbrOfFF1Rounds = 10
-
 			var idx = standardNbrOfFF1Rounds-i-1
 			var expectedQ = round.q
 			var q = getFF1Q(tweak, radix, beta, idx, x)
