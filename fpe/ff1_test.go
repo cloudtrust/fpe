@@ -9,11 +9,10 @@ package fpe
 import (
 	"testing"
 	"crypto/aes"
-	"bytes"
 	"crypto/cipher"
 	"math/big"
-	"reflect"
 	"math/rand"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -21,16 +20,19 @@ const (
 )
 
 // Common values for tests.
-var commonInput1 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-var commonInput2 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}
-var commonTweak1 = []byte{0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30}
-var commonTweak2 = []byte{0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72, 0x73, 0x37, 0x37, 0x37}
-var commonKey128 = []byte{0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c}
-var commonKey192 = []byte{
+var ff1DefaultTweakSize = 16
+var ff1DefaultKeySize = 16
+var ff1DefaultRadix = 10
+var ff1CommonInput1 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+var ff1CommonInput2 = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}
+var ff1CommonTweak1 = []byte{0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30}
+var ff1CommonTweak2 = []byte{0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72, 0x73, 0x37, 0x37, 0x37}
+var ff1CommonKey128 = []byte{0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c}
+var ff1CommonKey192 = []byte{
 	0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
 	0xef, 0x43, 0x59, 0xd8, 0xd5, 0x80, 0xaa, 0x4f,
 }
-var commonKey256 = []byte{
+var ff1CommonKey256 = []byte{
 	0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
 	0xef, 0x43, 0x59, 0xd8, 0xd5, 0x80, 0xaa, 0x4f, 0x7f, 0x03, 0x6d, 0x6f, 0x04, 0xfc, 0x6a, 0x94,
 }
@@ -67,14 +69,14 @@ var ff1Tests = []struct {
 	// FF1 samples: http://csrc.nist.gov/groups/ST/toolkit/documents/Examples/FF1samples.pdf.
 	{
 		"Sample #1",
-		commonKey128,
+		ff1CommonKey128,
 		10,
 		[]byte{},
-		commonInput1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 0},
@@ -306,14 +308,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #2",
-		commonKey128,
+		ff1CommonKey128,
 		10,
-		commonTweak1,
-		commonInput1,
+		ff1CommonTweak1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 10},
@@ -545,14 +547,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #3",
-		commonKey128,
+		ff1CommonKey128,
 		36,
-		commonTweak2,
-		commonInput2,
+		ff1CommonTweak2,
+		ff1CommonInput2,
 		9,
 		10,
-		commonInput2[:9],
-		commonInput2[9:],
+		ff1CommonInput2[:9],
+		ff1CommonInput2[9:],
 		7,
 		12,
 		[]byte{1, 2, 1, 0, 0, 36, 10, 9, 0, 0, 0, 19, 0, 0, 0, 11},
@@ -782,14 +784,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #4",
-		commonKey192,
+		ff1CommonKey192,
 		10,
 		[]byte{},
-		commonInput1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 0},
@@ -1022,14 +1024,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #5",
-		commonKey192,
+		ff1CommonKey192,
 		10,
-		commonTweak1,
-		commonInput1,
+		ff1CommonTweak1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 10},
@@ -1261,14 +1263,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #6",
-		commonKey192,
+		ff1CommonKey192,
 		36,
-		commonTweak2,
-		commonInput2,
+		ff1CommonTweak2,
+		ff1CommonInput2,
 		9,
 		10,
-		commonInput2[:9],
-		commonInput2[9:],
+		ff1CommonInput2[:9],
+		ff1CommonInput2[9:],
 		7,
 		12,
 		[]byte{1, 2, 1, 0, 0, 36, 10, 9, 0, 0, 0, 19, 0, 0, 0, 11},
@@ -1500,14 +1502,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #7",
-		commonKey256,
+		ff1CommonKey256,
 		10,
 		[]byte{},
-		commonInput1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 0},
@@ -1739,14 +1741,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #8",
-		commonKey256,
+		ff1CommonKey256,
 		10,
-		commonTweak1,
-		commonInput1,
+		ff1CommonTweak1,
+		ff1CommonInput1,
 		5,
 		5,
-		commonInput1[:5],
-		commonInput1[5:],
+		ff1CommonInput1[:5],
+		ff1CommonInput1[5:],
 		3,
 		8,
 		[]byte{1, 2, 1, 0, 0, 10, 10, 5, 0, 0, 0, 10, 0, 0, 0, 10},
@@ -1978,14 +1980,14 @@ var ff1Tests = []struct {
 	},
 	{
 		"Sample #9",
-		commonKey256,
+		ff1CommonKey256,
 		36,
-		commonTweak2,
-		commonInput2,
+		ff1CommonTweak2,
+		ff1CommonInput2,
 		9,
 		10,
-		commonInput2[:9],
-		commonInput2[9:],
+		ff1CommonInput2[:9],
+		ff1CommonInput2[9:],
 		7,
 		12,
 		[]byte{1, 2, 1, 0, 0, 36, 10, 9, 0, 0, 0, 19, 0, 0, 0, 11},
@@ -2219,68 +2221,322 @@ var ff1Tests = []struct {
 
 func getBigInt(s string) (big.Int) {
 	var x = big.NewInt(0)
-	x, success := x.SetString(s, 10)
+	x, success := x.SetString(s, ff1DefaultRadix)
 	if success == false {
 		panic("getBigInt: Cannot create Big integer")
 	}
 	return *x
 }
 
+func TestNewFF1Encrypter(t *testing.T) {
+	var key, _, iv []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
+
+	var aesBlock, err = aes.NewCipher(key)
+	assert.Nil(t, err)
+	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
+
+	// Invalid tweak length
+	var f func()
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1+1)
+		rand.Read(tweak)
+		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid radix
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1 + 1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid Block
+	var invalidBlock *mockBlock = &mockBlock{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Encrypter(invalidBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid BlockMode
+	var invalidBlockMode *mockBlockMode = &mockBlockMode{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Encrypter(aesBlock, invalidBlockMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+}
+
+func TestNewFF1Decrypter(t *testing.T) {
+	var key, _, iv []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
+
+	var aesBlock, err = aes.NewCipher(key)
+	assert.Nil(t, err)
+	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
+
+	// Invalid tweak length
+	var f func()
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1+1)
+		rand.Read(tweak)
+		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid radix
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1 + 1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid Block
+	var invalidBlock *mockBlock = &mockBlock{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Decrypter(invalidBlock, cbcMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+
+	// Invalid BlockMode
+	var invalidBlockMode *mockBlockMode = &mockBlockMode{}
+	f = func() {
+		var radix uint32 = uint32(maxRadixFF1)
+		var tweak = make([]byte, maxTweakLenFF1)
+		rand.Read(tweak)
+		NewFF1Decrypter(aesBlock, invalidBlockMode, tweak, radix)
+	}
+	assert.Panics(t, f)
+}
+
+// Test input validation of Crypt method for FF1 encrypter and decrypter
+func TestFF1CryptBlocks(t *testing.T) {
+	var key, tweak, iv []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
+	var radix uint32 = minRadixFF1
+
+	var aesBlock, err = aes.NewCipher(key)
+	assert.Nil(t, err)
+	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
+
+	var ff1BlockMode []BlockMode = []BlockMode{
+		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix),
+		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix),
+	}
+
+	for _, ff1 := range ff1BlockMode {
+
+		// Test invalid input length
+		var f func()
+		f = func() {
+			// 1 is smaller than minInputLenFF1
+			var numStr= make([]uint16, 1)
+			var b= NumeralStringToBytes(numStr)
+			ff1.CryptBlocks(b, b)
+		}
+		assert.Panics(t, f)
+
+		// Test radix^len < 100
+		f = func() {
+			// minInputLenFF1 < 5 and radix^len < 100
+			var numStr= make([]uint16, 5)
+			var b= NumeralStringToBytes(numStr)
+			ff1.CryptBlocks(b, b)
+		}
+		assert.Panics(t, f)
+
+		// Test len(dst) != len(src)
+		f = func() {
+			// minInputLenFF1 < 10 and radix^len > 100
+			var numStr= make([]uint16, 10)
+			var b= NumeralStringToBytes(numStr)
+			var dst= make([]byte, len(b)+1)
+			ff1.CryptBlocks(dst, b)
+		}
+		assert.Panics(t, f)
+
+		// Test invalid numeral string
+		f = func() {
+			var validLength= 10
+			var numStr= make([]uint16, validLength)
+			assert.Equal(t, radix, uint32(2))
+			numStr[0] = 3 // invalid for radix 2
+			var b= NumeralStringToBytes(numStr)
+			ff1.CryptBlocks(b, b)
+		}
+		assert.Panics(t, f)
+	}
+}
+
 // This test check that the function SetTweak of the FF1Encrypter and FF1Decrypter works correctly.
 func TestSetFF1Tweak (t *testing.T) {
-	var key = make([]byte, 16)
-	var tweak = make([]byte, 16)
-	var iv = make([]byte, 16)
+	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 
 	type fpeWithSetTweak interface {
 		cipher.BlockMode
 		SetTweak([]byte)
 	}
 
-	var aesBlock, err = aes.NewCipher(key)
-	if err != nil {
-		t.Errorf("%s: NewCipher = %s", t.Name(), err)
+	// FF1 Encrypter
+	var encrypter BlockMode
+	{
+		var err error
+		encrypter, err = getFF1Encrypter(key, tweak, uint32(ff1DefaultRadix))
+		assert.Nil(t, err)
 	}
 
-	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
-	var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, 10)
-
-	var fpeIV, ok = encrypter.(fpeWithSetTweak)
-	if !ok {
-		t.Errorf("%s: FF1Encrypter has no SetTweak function", t.Name())
+	var encWithSetTweak fpeWithSetTweak
+	{
+		var ok bool
+		encWithSetTweak, ok = encrypter.(fpeWithSetTweak)
+		assert.True(t, ok)
+		assert.NotNil(t, encWithSetTweak)
 	}
 
-	var plaintext = make([]byte, 100)
-	var ciphertext = make([]byte, 100)
-	var ciphertext2 = make([]byte, 100)
-	fpeIV.CryptBlocks(ciphertext, plaintext)
-	// Modify tweak.
-	tweak[0] ^= 0xff
-	fpeIV.SetTweak(tweak)
-	fpeIV.CryptBlocks(ciphertext2, plaintext)
+	// Set valid tweak
+	var f func()
+	f = func()  {
+		var tweak = make([]byte, maxTweakLenFF1)
+		encWithSetTweak.SetTweak(tweak)
+	}
+	assert.NotPanics(t, f)
 
-	if bytes.Equal(ciphertext, ciphertext2) {
-		t.Errorf("%s: changing the tweak should change the ciphertext", t.Name())
+	// Set invalid tweak
+	f = func()  {
+		var tweak = make([]byte, maxTweakLenFF1+1)
+		encWithSetTweak.SetTweak(tweak)
+	}
+	assert.Panics(t, f)
+
+	// FF1 Decrypter
+	var decrypter BlockMode
+	{
+		var err error
+		decrypter, err = getFF1Decrypter(key, tweak, uint32(ff1DefaultRadix))
+		assert.Nil(t, err)
 	}
 
-	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, 10)
-
-	fpeIV, ok = decrypter.(fpeWithSetTweak)
-	if !ok {
-		t.Errorf("%s: FF1Decrypter has no SetTweak function", t.Name())
+	var decWithSetTweak fpeWithSetTweak
+	{
+		var ok bool
+		decWithSetTweak, ok = decrypter.(fpeWithSetTweak)
+		assert.True(t, ok)
+		assert.NotNil(t, decWithSetTweak)
 	}
-	plaintext = make([]byte, 100)
-	ciphertext = make([]byte, 100)
-	ciphertext2 = make([]byte, 100)
-	fpeIV.CryptBlocks(ciphertext, plaintext)
-	// Modify tweak.
-	tweak[0] ^= 0xff
-	fpeIV.SetTweak(tweak)
-	fpeIV.CryptBlocks(ciphertext2, plaintext)
 
-	if bytes.Equal(ciphertext, ciphertext2) {
-		t.Errorf("%s: changing the tweak must change the ciphertext", t.Name())
+	// Set valid tweak
+	f = func()  {
+		var tweak = make([]byte, maxTweakLenFF1)
+		decWithSetTweak.SetTweak(tweak)
 	}
+	assert.NotPanics(t, f)
+
+	// Set invalid tweak
+	f = func()  {
+		var tweak = make([]byte, maxTweakLenFF1+1)
+		decWithSetTweak.SetTweak(tweak)
+	}
+	assert.Panics(t, f)
+}
+
+// This test check that the function SetRadix of the FF1Encrypter and FF1Decrypter works correctly.
+func TestSetFF1Radix (t *testing.T) {
+	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
+
+	var radix = uint32(rand.Intn(1000) + minRadixFF1)
+	var otherRadix uint32 = radix + 10
+
+	type fpeWithSetRadix interface {
+		cipher.BlockMode
+		SetRadix(uint32)
+	}
+
+	// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
+	// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
+	// upper bound to 400 for performance reasons.
+	var l = int(rand.Uint32() % 394) + 7
+	var plaintextRadix = generateRandomNumeralString(radix, l)
+	var plaintextOtherRadix = generateRandomNumeralString(otherRadix, l)
+	var plaintextBytes = make([]byte, 2*len(plaintextRadix))
+	var ciphertextBytes = make([]byte, 2*len(plaintextRadix))
+	var ciphertextRadix = make([]uint16, len(plaintextRadix))
+	var ciphertextOtherRadix = make([]uint16, len(plaintextOtherRadix))
+	var decryptedRadix = make([]uint16, len(plaintextRadix))
+	var decryptedOtherRadix = make([]uint16, len(plaintextOtherRadix))
+
+	// Encipher plaintext
+	var encrypter BlockMode
+	{
+		var err error
+		encrypter, err = getFF1Encrypter(key, tweak, radix)
+		assert.Nil(t, err)
+	}
+
+	var encrypterWithSetRadix fpeWithSetRadix
+	{
+		var ok bool
+		encrypterWithSetRadix, ok = encrypter.(fpeWithSetRadix)
+		assert.True(t, ok)
+	}
+	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextRadix))
+	ciphertextRadix = BytesToNumeralString(ciphertextBytes)
+
+	// Change radix to otherRadix, then encipher
+	encrypterWithSetRadix.SetRadix(otherRadix)
+	encrypterWithSetRadix.CryptBlocks(ciphertextBytes, NumeralStringToBytes(plaintextOtherRadix))
+	ciphertextOtherRadix = BytesToNumeralString(ciphertextBytes)
+
+	// Decipher ciphertext
+	var decrypter BlockMode
+	{
+		var err error
+		decrypter, err = getFF1Decrypter(key, tweak, radix)
+		assert.Nil(t, err)
+	}
+
+	var decrypterWithSetRadix fpeWithSetRadix
+	{
+		var ok bool
+		decrypterWithSetRadix, ok = decrypter.(fpeWithSetRadix)
+		assert.True(t, ok)
+
+	}
+	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextRadix))
+	decryptedRadix = BytesToNumeralString(plaintextBytes)
+
+	// Change radix to otherRadix, then decipher
+	decrypterWithSetRadix.SetRadix(otherRadix)
+	decrypterWithSetRadix.CryptBlocks(plaintextBytes, NumeralStringToBytes(ciphertextOtherRadix))
+	decryptedOtherRadix = BytesToNumeralString(plaintextBytes)
+
+	assert.Equal(t, plaintextRadix, decryptedRadix)
+	assert.Equal(t, plaintextOtherRadix, decryptedOtherRadix)
+
+	// Set invalid radix
+	var f func()
+	f = func()  {
+		var radix = uint32(maxRadixFF1+1)
+		encrypterWithSetRadix.SetRadix(radix)
+	}
+	assert.Panics(t, f)
+
+	f = func()  {
+		var radix = uint32(maxRadixFF1+1)
+		decrypterWithSetRadix.SetRadix(radix)
+	}
+	assert.Panics(t, f)
 }
 
 // This test uses the NIST test vectors to validate the b value.
@@ -2291,9 +2547,7 @@ func TestGetB(t *testing.T) {
 		var expectedB = test.beta
 		var b = getFF1B(v, radix)
 
-		if b != expectedB {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, b, expectedB)
-		}
+		assert.Equal(t, b, expectedB)
 	}
 }
 
@@ -2304,9 +2558,7 @@ func TestGetD(t *testing.T) {
 		var expectedD = test.d
 		var d = getFF1D(b)
 
-		if d != expectedD {
-			t.Errorf("%s(%s):\nhave %d\nwant %d", t.Name(), test.name, d, expectedD)
-		}
+		assert.Equal(t, d, expectedD)
 	}
 }
 
@@ -2320,9 +2572,7 @@ func TestGetFF1P(t *testing.T) {
 		var expectedP = test.p
 		var p = getFF1P(radix, u, n, tl)
 
-		if !bytes.Equal(p, expectedP) {
-			t.Errorf("%s(%s):\nhave %x\nwant %x", t.Name(), test.name, p, expectedP)
-		}
+		assert.Equal(t, p, expectedP)
 	}
 }
 
@@ -2342,25 +2592,20 @@ func TestGetQ(t *testing.T) {
 			// The getFF1Q input x is the numeral string b from the previous round.
 			x = round.b
 
-			if !bytes.Equal(q, expectedQ) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, q, expectedQ)
-			}
+			assert.Equal(t, q, expectedQ)
 		}
 
 		// For the first decryption round, the x value is the left half of the output numeral string.
 		x = test.out[:test.u]
 		// Iter over each decryption round.
 		for i, round := range test.decRounds {
-			var standardNbrOfFF3Rounds = 10
-
-			var idx = standardNbrOfFF3Rounds-i-1
+			var standardNbrOfFF1Rounds = 10
+			var idx = standardNbrOfFF1Rounds-i-1
 			var expectedQ = round.q
 			var q = getFF1Q(tweak, radix, beta, idx, x)
 			x = round.a
 
-			if !bytes.Equal(q, expectedQ) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, q, expectedQ)
-			}
+			assert.Equal(t, q, expectedQ)
 		}
 	}
 }
@@ -2370,17 +2615,12 @@ func TestPrf(t *testing.T) {
 	for _, test := range ff1Tests {
 		var p = test.p
 		var aesBlock, err = aes.NewCipher(test.key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
+		assert.Nil(t, err)
 
-		var iv = make([]byte, 16)
+		var iv = make([]byte, blockSizeFF1)
 		var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
 		var cbcModeWithSetIV, ok = cbcMode.(cbcWithSetIV)
-		if !ok {
-			t.Errorf("%s: CBC mode does not have a SetIV function", t.Name())
-		}
+		assert.True(t, ok)
 
 		// Iter over each encryption round.
 		for _, round := range test.encRounds {
@@ -2388,9 +2628,7 @@ func TestPrf(t *testing.T) {
 			var expectedR = round.r
 			var r = prf(cbcModeWithSetIV, append(p, q...))
 
-			if !bytes.Equal(r, expectedR) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, r, expectedR)
-			}
+			assert.Equal(t, r, expectedR)
 		}
 
 		// Iter over each decryption round.
@@ -2399,9 +2637,7 @@ func TestPrf(t *testing.T) {
 			var expectedR = round.r
 			var r = prf(cbcModeWithSetIV, append(p, q...))
 
-			if !bytes.Equal(r, expectedR) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, r, expectedR)
-			}
+			assert.Equal(t, r, expectedR)
 		}
 	}
 }
@@ -2411,10 +2647,7 @@ func TestGetS(t *testing.T) {
 	for _, test := range ff1Tests {
 		var d = test.d
 		var aesBlock, err = aes.NewCipher(test.key)
-		if err != nil {
-			t.Errorf("%s(%s): NewCipher = %s", t.Name(), test.name, err)
-			continue
-		}
+		assert.Nil(t, err)
 
 		// Iter over each encryption round.
 		for _, round := range test.encRounds {
@@ -2422,9 +2655,7 @@ func TestGetS(t *testing.T) {
 			var expectedS = round.s
 			var s = getFF1S(aesBlock, r, d)
 
-			if !bytes.Equal(s, expectedS) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, s, expectedS)
-			}
+			assert.Equal(t, s, expectedS)
 		}
 
 		// Iter over each decryption round.
@@ -2433,9 +2664,7 @@ func TestGetS(t *testing.T) {
 			var expectedS = round.s
 			var s = getFF1S(aesBlock, r, d)
 
-			if !bytes.Equal(s, expectedS) {
-				t.Errorf("%s %s(%s):\nhave %x\nwant %x", t.Name(), test.name, round.name, s, expectedS)
-			}
+			assert.Equal(t, s, expectedS)
 		}
 	}
 }
@@ -2449,9 +2678,7 @@ func TestGetY(t *testing.T) {
 			var expectedY = &round.y
 			var y = num(s)
 
-			if y.Cmp(expectedY) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, y.String(), expectedY.String())
-			}
+			assert.Equal(t, y, expectedY)
 		}
 
 		// Iter over each decryption round.
@@ -2460,9 +2687,7 @@ func TestGetY(t *testing.T) {
 			var expectedY = &round.y
 			var y = num(s)
 
-			if y.Cmp(expectedY) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, y.String(), expectedY.String())
-			}
+			assert.Equal(t, y, expectedY)
 		}
 	}
 }
@@ -2484,9 +2709,7 @@ func TestGetC(t *testing.T) {
 			// The getFF1Q input x is the numeral string a from the previous round.
 			x = round.a
 
-			if c.Cmp(expectedC) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, c.String(), expectedC.String())
-			}
+			assert.Equal(t, c, expectedC)
 		}
 
 		// For the first decryption round, the getFF1CDec input x is the right half of the output numeral string.
@@ -2500,9 +2723,7 @@ func TestGetC(t *testing.T) {
 			// The getFF1Q input x is the numeral string b from the previous round.
 			x = round.b
 
-			if c.Cmp(expectedC) != 0 {
-				t.Errorf("%s %s(%s):\nhave %s\nwant %s", t.Name(), test.name, round.name, c.String(), expectedC.String())
-			}
+			assert.Equal(t, c, expectedC)
 		}
 	}
 }
@@ -2511,23 +2732,27 @@ func TestGetC(t *testing.T) {
 // the decrypted result matches the original plaintext.
 func TestFF1EncryptionDecryption(t *testing.T) {
 	for i := 0; i < nbrFF1Tests; i++ {
-		var key = make([]byte, 16)
-		rand.Read(key)
-		var tweak = make([]byte, 16)
-		rand.Read(tweak)
-		var radix = (rand.Uint32() % (maxRadixFF1-10)) + 10
-		var l = int(rand.Uint32() % 400) + 10
+		var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 
-		var aesBlock, err = aes.NewCipher(key)
-		if err != nil {
-			t.Errorf("%s: NewCipher = %s", t.Name(), err)
-			continue
+		// Chose random radix between minRadixFF1 and maxRadixFF1
+		var radix = (rand.Uint32() % (maxRadixFF1-minRadixFF1)) + minRadixFF1
+		// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
+		// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
+		// upper bound to 400 for performance reasons.
+		var l = int(rand.Uint32() % 394) + 7
+
+		var encrypter BlockMode
+		{
+			var err error
+			encrypter, err = getFF1Encrypter(key, tweak, radix)
+			assert.Nil(t, err)
 		}
-
-		var iv = make([]byte, 16)
-		var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
-		var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
-		var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
+		var decrypter BlockMode
+		{
+			var err error
+			decrypter, err = getFF1Decrypter(key, tweak, radix)
+			assert.Nil(t, err)
+		}
 
 		// Encrypt random numeral string with random key
 		var plaintext = generateRandomNumeralString(radix, l)
@@ -2541,29 +2766,31 @@ func TestFF1EncryptionDecryption(t *testing.T) {
 		decrypter.CryptBlocks(dst, src)
 		var decrypted = BytesToNumeralString(dst)
 
-		if !reflect.DeepEqual(plaintext, decrypted) {
-			t.Errorf("%s l=%d, radix=%d, key=%x, tweak=%x:\nhave %d\nwant %d", t.Name(), l, radix, key, tweak, decrypted, plaintext)
-		}
+		assert.Equal(t, plaintext, decrypted)
 	}
 }
 
 func TestFF1CornerCases(t *testing.T) {
-	var key = make([]byte, 16)
-	rand.Read(key)
-	var tweak = make([]byte, 16)
-	rand.Read(tweak)
-
-	var aesBlock, err = aes.NewCipher(key)
-	if err != nil {
-		t.Errorf("%s: NewCipher = %s", t.Name(), err)
-	}
+	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 
 	var radix = uint32(maxRadixFF1)
-	var l = 100
-	var iv = make([]byte, 16)
-	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
-	var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
-	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
+	// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
+	// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
+	// upper bound to 400 for performance reasons.
+	var l = int(rand.Uint32() % 394) + 7
+
+	var encrypter BlockMode
+	{
+		var err error
+		encrypter, err = getFF1Encrypter(key, tweak, radix)
+		assert.Nil(t, err)
+	}
+	var decrypter BlockMode
+	{
+		var err error
+		decrypter, err = getFF1Decrypter(key, tweak, radix)
+		assert.Nil(t, err)
+	}
 
 	// Encrypt
 	var plaintext = make([]uint16, l)
@@ -2580,7 +2807,68 @@ func TestFF1CornerCases(t *testing.T) {
 	decrypter.CryptBlocks(dst, src)
 	var decrypted = BytesToNumeralString(dst)
 
-	if !reflect.DeepEqual(plaintext, decrypted) {
-		t.Errorf("%s l=%d, radix=%d, key=%x, tweak=%x:\nhave %d\nwant %d", t.Name(), l, radix, key, tweak, decrypted, plaintext)
-	}
+	assert.Equal(t, plaintext, decrypted)
 }
+
+
+func TestFF1BlockSize(t *testing.T) {
+	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
+	var radix = uint32(rand.Intn(1000) + minRadixFF1)
+
+	var encrypter BlockMode
+	{
+		var err error
+		encrypter, err = getFF1Encrypter(key, tweak, radix)
+		assert.Nil(t, err)
+	}
+	var decrypter BlockMode
+	{
+		var err error
+		decrypter, err = getFF1Decrypter(key, tweak, radix)
+		assert.Nil(t, err)
+	}
+
+	assert.Equal(t, blockSizeFF1, encrypter.BlockSize())
+	assert.Equal(t, blockSizeFF1, decrypter.BlockSize())
+}
+
+func getFF1Encrypter(key, tweak []byte, radix uint32) (cipher.BlockMode, error) {
+	// Create AES Block used by FF1.
+	var aesBlock, err = aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create CBC mode used by FF1.
+	var iv = make([]byte, blockSizeFF1)
+	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
+
+	// Create FF1 Encrypter
+	var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
+
+	return encrypter, nil
+}
+
+func getFF1Decrypter(key, tweak []byte, radix uint32) (cipher.BlockMode, error) {
+	// Create AES Block used by FF1.
+	var aesBlock, err = aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create CBC mode used by FF1.
+	var iv = make([]byte, blockSizeFF1)
+	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
+
+	// Create FF1 Decrypter
+	var decrypter = NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
+
+	return decrypter, nil
+}
+
+// Mock BlockMode
+type mockBlockMode struct {}
+
+// Return a BlockMode without SetIv method
+func (c *mockBlockMode) BlockSize() int { return 16 }
+func (c *mockBlockMode) CryptBlocks(dst, src []byte) {}

@@ -83,13 +83,13 @@ func (x *ff1Encrypter) CryptBlocks(dst, src []byte) {
 	var n = uint32(len(numeralString))
 
 	if n < minInputLenFF1 || n > maxInputLenFF1 {
-		panic(fmt.Sprintf("FF1Encrypter/CryptBlocks: input length must be in [%d..%d].", minInputLenFF1, maxInputLenFF1))
+		panic(fmt.Sprintf("FF1Encrypter/CryptBlocks: src length must be in [%d..%d].", minInputLenFF1, maxInputLenFF1))
 	}
 	if math.Pow(float64(radix), float64(n)) < 100 {
 		panic("FF1Encrypter/CryptBlocks: radix^len < 100.")
 	}
-	if len(dst) < len(src) {
-		panic("FF1Encrypter/CryptBlocks: output smaller than input.")
+	if len(dst) != len(src) {
+		panic("FF1Encrypter/CryptBlocks: src and dst size must be equal.")
 	}
 	if !isNumeralStringValid(numeralString, radix) {
 		panic("FF1Encrypter/CryptBlocks: numeral string not valid.")
@@ -136,6 +136,13 @@ func (x *ff1Encrypter) SetTweak(tweak []byte) {
 	copy(x.tweak, tweak)
 }
 
+func (x *ff1Encrypter) SetRadix(radix uint32) {
+	if radix < minRadixFF1 || radix > maxRadixFF1 {
+		panic(fmt.Sprintf("FF1Encrypter/SetRadix: radix must be in [%d..%d].", minRadixFF1, maxRadixFF1))
+	}
+	x.radix = radix
+}
+
 type ff1Decrypter ff1
 
 // NewFF1Decrypter returns a BlockMode which decrypts in FF1 mode, using the given
@@ -168,13 +175,13 @@ func (x *ff1Decrypter) CryptBlocks(dst, src []byte) {
 	var n = uint32(len(numeralString))
 
 	if n < minInputLenFF1 || n > maxInputLenFF1 {
-		panic(fmt.Sprintf("FF1Decrypter/CryptBlocks: input length must be in [%d..%d].", minInputLenFF1, maxInputLenFF1))
+		panic(fmt.Sprintf("FF1Decrypter/CryptBlocks: src length must be in [%d..%d].", minInputLenFF1, maxInputLenFF1))
 	}
 	if math.Pow(float64(radix), float64(n)) < 100 {
 		panic("FF1Decrypter/CryptBlocks: radix^len < 100.")
 	}
-	if len(dst) < len(src) {
-		panic("FF1Decrypter/CryptBlocks: output smaller than input.")
+	if len(dst) != len(src) {
+		panic("FF1Decrypter/CryptBlocks: src and dst size must be equal.")
 	}
 	if !isNumeralStringValid(numeralString, radix) {
 		panic("FF1Decrypter/CryptBlocks: numeral string not valid.")
@@ -219,6 +226,13 @@ func (x *ff1Decrypter) SetTweak(tweak []byte){
 		panic(fmt.Sprintf("FF1Decrypter/SetTweak: tweak must be [%d..%d] bytes.", minTweakLenFF1, maxTweakLenFF1))
 	}
 	copy(x.tweak, tweak)
+}
+
+func (x *ff1Decrypter) SetRadix(radix uint32) {
+	if radix < minRadixFF1 || radix > maxRadixFF1 {
+		panic(fmt.Sprintf("FF1Decrypter/SetRadix: radix must be in [%d..%d].", minRadixFF1, maxRadixFF1))
+	}
+	x.radix = radix
 }
 
 // getFF1B takes an integer v and an integer radix. It returns b = ceil(ceil(v * log2(radix)) / 8).

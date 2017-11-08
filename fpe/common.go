@@ -7,6 +7,7 @@ package fpe
 import (
 	"math/big"
 	"encoding/binary"
+	"math"
 )
 
 // numRadix takes a number radix and a numeral string x. It returns the
@@ -125,7 +126,8 @@ func NumeralStringToBytes(numeralString []uint16) ([]byte) {
 // BytesToNumeralString takes a byte array and returns its representation
 // as a string of numerals.
 func BytesToNumeralString(bytes []byte) ([]uint16) {
-	var out = make([]uint16, len(bytes) / 2)
+	var size = int(math.Ceil(float64(len(bytes) / 2)))
+	var out = make([]uint16, size)
 	var l = len(out)
 
 	for i := 0; i < l; i++ {
