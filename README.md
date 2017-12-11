@@ -1,7 +1,9 @@
 # Format-preserving encryption (FPE) [![Build Status](https://travis-ci.org/cloudtrust/fpe.svg?branch=master)](https://travis-ci.org/cloudtrust/fpe)
 
 Cloudtrust FPE provides an implementation of the FF1 and FF3 mode of operation for  format-preserving encryption from the [NIST Special Publication 800-38G](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38G.pdf).
+
 There are attacks on the NIST standard. The branch [fpe-fix](https://github.com/cloudtrust/fpe/tree/fpe-fix) includes the fixes described in [this](#attacks-on-the-nist-standard) section.
+
 The FPE schemes cannot be used as is. We need to define formats, validate and convert data to  inputs that can be treated by FF1 and FF3, and finally convert the outputs back to the desired format. This task is delicate, and if not done correctly can have catastrophic consequences such as security issues or data loss (unability to decipher encrypted data).
 Some of the most common formats like credit cards, string, or numbers are provided in the [helper](https://github.com/cloudtrust/fpe-field-format) repository.
 
