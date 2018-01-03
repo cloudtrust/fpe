@@ -1,19 +1,13 @@
-// FF3 (Format-preserving, Feistel-based encryption) mode.
-//
-// Format-preserving encryption (FPE) is designed for data that is not
-// necessarily binary. In particular, given any finite set of symbols,
-// like the decimal numerals, a method for FPE transforms data that is
-// formatted as a sequence of the symbols in such a way that the encrypted
-// form of the data has the same format, including the length, as the
-// original data.
-//
-// See NIST SP 800-38G, pp 16-19.
+// Package fpe provides an implementation of the FF1 and FF3 mode of operation
+// for format-preserving encryption.
+// See NIST SP 800-38G (http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38G.pdf).
 package fpe
 
 import (
+	"crypto/cipher"
+	"fmt"
 	"math"
 	"math/big"
-	"fmt"
 )
 
 const (
@@ -23,7 +17,7 @@ const (
 	tweakLenFF3 = 8
 	// The radix must be in [2..2^16].
 	minRadixFF3 = 2
-	maxRadixFF3 = 1<<16
+	maxRadixFF3 = 1 << 16
 	// The minimum length of the numeral string is 2.
 	minInputLenFF3 = 2
 	// The internal cipher's block size (16 bytes for AES).
@@ -31,16 +25,16 @@ const (
 )
 
 type ff3 struct {
-	aesBlock  Block
-	tweak     []byte
-	radix     uint32
+	aesBlock cipher.Block
+	tweak    []byte
+	radix    uint32
 }
 
-func newFF3(aesBlock Block, tweak []byte, radix uint32) *ff3 {
+func newFF3(aesBlock cipher.Block, tweak []byte, radix uint32) *ff3 {
 	return &ff3{
-		aesBlock:  aesBlock,
-		tweak:     dup(tweak),
-		radix:     radix,
+		aesBlock: aesBlock,
+		tweak:    dup(tweak),
+		radix:    radix,
 	}
 }
 
@@ -49,7 +43,7 @@ type ff3Encrypter ff3
 // NewFF3Encrypter returns a BlockMode which encrypts in FF3 mode, using the given
 // Block. The given block must be AES, the length of tweak must be 64 bits, and
 // the radix must be in [2..2^16].
-func NewFF3Encrypter(aesBlock Block, tweak []byte, radix uint32) BlockMode {
+func NewFF3Encrypter(aesBlock cipher.Block, tweak []byte, radix uint32) cipher.BlockMode {
 	if len(tweak) != tweakLenFF3 {
 		panic(fmt.Sprintf("NewFF3Encrypter: tweak must be %d bytes.", tweakLenFF3))
 	}
@@ -93,7 +87,7 @@ func (x *ff3Encrypter) CryptBlocks(dst, src []byte) {
 	for i := uint32(0); i < roundsFF3; i++ {
 		var w []byte
 		var m uint32
-		if i % 2 == 0 {
+		if i%2 == 0 {
 			m = u
 			w = tr
 		} else {
@@ -134,7 +128,7 @@ type ff3Decrypter ff3
 // Block. The given block must be AES, the radix must be in [2..2^16], the
 // length of tweak must be 64 bits and the tweak must be the same as the tweak
 // used to encrypt the data.
-func NewFF3Decrypter(aesBlock Block, tweak []byte, radix uint32) BlockMode {
+func NewFF3Decrypter(aesBlock cipher.Block, tweak []byte, radix uint32) cipher.BlockMode {
 	if len(tweak) != tweakLenFF3 {
 		panic(fmt.Sprintf("NewFF3Decrypter: tweak must be %d bytes.", tweakLenFF3))
 	}
@@ -175,10 +169,10 @@ func (x *ff3Decrypter) CryptBlocks(dst, src []byte) {
 	var tl = tweak[:4]
 	var tr = tweak[4:]
 
-	for i := roundsFF3-1; i >= 0 ; i-- {
+	for i := roundsFF3 - 1; i >= 0; i-- {
 		var w []byte
 		var m uint32
-		if i % 2 == 0 {
+		if i%2 == 0 {
 			m = u
 			w = tr
 		} else {
@@ -216,17 +210,17 @@ func (x *ff3Decrypter) SetRadix(radix uint32) {
 // maxLength takes an integer radix. It returns the maximum length of the input numeral string
 // computed as maxlen = 2 * floor(log_radix(2^96)).
 func maxLength(radix uint32) int {
-	return 2 * int(math.Floor(math.Log2(math.Pow(2,96)) / math.Log2(float64(radix))))
+	return 2 * int(math.Floor(math.Log2(math.Pow(2, 96))/math.Log2(float64(radix))))
 }
 
 // getFF3P takes a byte string w, the integers i, radix and a numeral string x. It returns
 // p = w xor [i]4 || [numRadix(rev(x))]12, where [x]y means x represented as a string of s bytes.
-func getFF3P(w []byte, i, radix uint32, x []uint16) ([]byte){
+func getFF3P(w []byte, i, radix uint32, x []uint16) []byte {
 	var p = make([]byte, blockSizeFF3)
 
-	p[0] = w[0] ^ byte(i >> 24)
-	p[1] = w[1] ^ byte(i >> 16)
-	p[2] = w[2] ^ byte(i >> 8)
+	p[0] = w[0] ^ byte(i>>24)
+	p[1] = w[1] ^ byte(i>>16)
+	p[2] = w[2] ^ byte(i>>8)
 	p[3] = w[3] ^ byte(i)
 	copy(p[4:], getAsBBytes(numRadix(rev(x), radix), 12))
 
@@ -234,7 +228,7 @@ func getFF3P(w []byte, i, radix uint32, x []uint16) ([]byte){
 }
 
 // getFF3S takes a byte string p and an AES Block. It returns s = revB(aes.Encrypt(revB(p))).
-func getFF3S(p []byte, aesBlock Block) ([]byte) {
+func getFF3S(p []byte, aesBlock cipher.Block) []byte {
 	var s = RevB(p)
 	aesBlock.Encrypt(s, s)
 	s = RevB(s)
@@ -243,7 +237,7 @@ func getFF3S(p []byte, aesBlock Block) ([]byte) {
 
 // getFF3CEnc takes a numeral string x, and the integers y, radix and m. It returns
 // c = (numRadix(rev(x), radix) + y) mod radix^m.
-func getFF3CEnc(x []uint16, y *big.Int, radix, m uint32) (*big.Int) {
+func getFF3CEnc(x []uint16, y *big.Int, radix, m uint32) *big.Int {
 	var c = numRadix(rev(x), radix)
 	c.Add(c, y)
 	var radixM = big.NewInt(0).Exp(big.NewInt(int64(radix)), big.NewInt(int64(m)), nil)
@@ -253,7 +247,7 @@ func getFF3CEnc(x []uint16, y *big.Int, radix, m uint32) (*big.Int) {
 
 // getFF3CDec takes a numeral string x, and the integers y, radix and m. It returns
 // c = (numRadix(rev(x), radix) - y) mod radix^m.
-func getFF3CDec(x []uint16, y *big.Int, radix, m uint32) (*big.Int) {
+func getFF3CDec(x []uint16, y *big.Int, radix, m uint32) *big.Int {
 	var c = numRadix(rev(x), radix)
 	c.Sub(c, y)
 	var radixM = big.NewInt(0).Exp(big.NewInt(int64(radix)), big.NewInt(int64(m)), nil)

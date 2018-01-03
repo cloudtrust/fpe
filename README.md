@@ -1,5 +1,4 @@
-# Format-preserving encryption (FPE) 
-[![Build Status](https://travis-ci.org/cloudtrust/fpe.svg?branch=master)](https://travis-ci.org/cloudtrust/fpe)
+# Format-preserving encryption (FPE) [![Build Status](https://travis-ci.org/cloudtrust/fpe.svg?branch=master)](https://travis-ci.org/cloudtrust/fpe) [![Coverage Status](https://coveralls.io/repos/github/cloudtrust/fpe/badge.svg?branch=master)](https://coveralls.io/github/cloudtrust/fpe?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/cloudtrust/fpe)](https://goreportcard.com/report/github.com/cloudtrust/fpe)
 
 Cloudtrust FPE provides an implementation of the FF1 and FF3 mode of operation for format-preserving encryption from the [NIST Special Publication 800-38G](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38G.pdf).
 
