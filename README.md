@@ -1,6 +1,5 @@
 # Format-preserving encryption (FPE) [![Build Status](https://travis-ci.org/cloudtrust/fpe.svg?branch=master)](https://travis-ci.org/cloudtrust/fpe) [![Coverage Status](https://coveralls.io/repos/github/cloudtrust/fpe/badge.svg?branch=master)](https://coveralls.io/github/cloudtrust/fpe?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/cloudtrust/fpe)](https://goreportcard.com/report/github.com/cloudtrust/fpe)
 
-
 Cloudtrust FPE provides an implementation of the FF1 and FF3 mode of operation for format-preserving encryption from the [NIST Special Publication 800-38G](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38G.pdf).
 
 There are attacks on the NIST standard. The branch [fpe-fix](https://github.com/cloudtrust/fpe/tree/fpe-fix) includes the fixes described in [this](#attacks-on-the-nist-standard) section.
@@ -53,11 +52,19 @@ func getFF1Encrypter(key, tweak []byte, radix uint32) (cipher.BlockMode, error) 
     if err != nil {
         return nil, err
     }
+<<<<<<< HEAD
 
     // Create CBC mode used by FF1.
     var iv = make([]byte, blockSizeFF1)
     var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
 
+=======
+
+    // Create CBC mode used by FF1.
+    var iv = make([]byte, blockSizeFF1)
+    var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
+
+>>>>>>> 53144fc120d02978cae8922051435827bdc2c32e
     // Create FF1 Encrypter.
     var encrypter = NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
 
@@ -83,10 +90,17 @@ func getFF3Encrypter(key, tweak []byte, radix uint32) (cipher.BlockMode, error) 
     return encrypter, nil
 }
 ```
+<<<<<<< HEAD
 
 Note that there is a specificity with the FF3 algorithm. The standard specifies that we must revert the bytes of the symmetric key (see: `aes.NewCipher(fpe.RevB(key)`). 
 If this is not done, it will affect interoperability.
 
+=======
+
+Note that there is a specificity with the FF3 algorithm. The standard specifies that we must revert the bytes of the symmetric key (see: `aes.NewCipher(fpe.RevB(key)`). 
+If this is not done, it will affect interoperability.
+
+>>>>>>> 53144fc120d02978cae8922051435827bdc2c32e
 ## Attacks on the NIST Standard
 There are attacks on the NIST Standard. The first is described in the publication [Message-recovery attacks on Feistel-based Format Preserving Encryption](https://eprint.iacr.org/2016/794.pdf) by Bellare, Hoang, and Tessaro. On page 5 of the same document, the authors suggest a simple fix: increasing the number of Feistel rounds.
 
