@@ -7,12 +7,12 @@
 package fpe
 
 import (
-	"testing"
 	"crypto/aes"
 	"crypto/cipher"
+	"github.com/stretchr/testify/assert"
 	"math/big"
 	"math/rand"
-	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 const (
@@ -38,31 +38,31 @@ var ff1CommonKey256 = []byte{
 }
 
 type ff1FeistelRound struct {
-	name  string
-	q     []byte
-	r     []byte
-	s     []byte
-	y     big.Int
-	m     uint32
-	c     big.Int
-	a     []uint16
-	b     []uint16
+	name string
+	q    []byte
+	r    []byte
+	s    []byte
+	y    big.Int
+	m    uint32
+	c    big.Int
+	a    []uint16
+	b    []uint16
 }
 
 var ff1Tests = []struct {
-	name   string
-	key    []byte
-	radix  uint32
-	tweak  []byte
-	in     []uint16
-	u 	   uint32
-	v      uint32
-	a      []uint16
-	b      []uint16
-	beta   uint64
-	d      uint64
-	p      []byte
-	out    []uint16
+	name      string
+	key       []byte
+	radix     uint32
+	tweak     []byte
+	in        []uint16
+	u         uint32
+	v         uint32
+	a         []uint16
+	b         []uint16
+	beta      uint64
+	d         uint64
+	p         []byte
+	out       []uint16
 	encRounds []ff1FeistelRound
 	decRounds []ff1FeistelRound
 }{
@@ -118,7 +118,7 @@ var ff1Tests = []struct {
 			{
 				"Encrypt: round #3",
 				[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 221, 61},
-				[]byte{125, 29, 160, 178, 41, 158, 148, 66, 104, 179,136, 46, 59, 198, 72, 57},
+				[]byte{125, 29, 160, 178, 41, 158, 148, 66, 104, 179, 136, 46, 59, 198, 72, 57},
 				[]byte{0x7d, 0x1d, 0xa0, 0xb2, 0x29, 0x9e, 0x94, 0x42},
 				getBigInt("9015538716128482370"),
 				5,
@@ -263,7 +263,7 @@ var ff1Tests = []struct {
 			{
 				"Decrypt: round #3",
 				[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 221, 61},
-				[]byte{125, 29, 160, 178, 41, 158, 148, 66, 104, 179,136, 46, 59, 198, 72, 57},
+				[]byte{125, 29, 160, 178, 41, 158, 148, 66, 104, 179, 136, 46, 59, 198, 72, 57},
 				[]byte{0x7d, 0x1d, 0xa0, 0xb2, 0x29, 0x9e, 0x94, 0x42},
 				getBigInt("9015538716128482370"),
 				5,
@@ -562,7 +562,7 @@ var ff1Tests = []struct {
 		[]ff1FeistelRound{
 			{
 				"Encrypt: round #0",
-				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55,	55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 89, 199, 207, 155,	163, 54},
+				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 89, 199, 207, 155, 163, 54},
 				[]byte{6, 251, 135, 106, 117, 248, 75, 85, 167, 247, 46, 141, 81, 123, 105, 129},
 				[]byte{0x06, 0xfb, 0x87, 0x6a, 0x75, 0xf8, 0x4b, 0x55, 0xa7, 0xf7, 0x2e, 0x8d},
 				getBigInt("2160989922982028678440365709"),
@@ -582,15 +582,15 @@ var ff1Tests = []struct {
 				[]uint16{30, 21, 22, 22, 28, 13, 4, 26, 9},
 				[]uint16{20, 6, 34, 23, 9, 6, 21, 20, 4, 25},
 			},
-			{	"Encrypt: round #2",
-				 []byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 73, 58, 149, 29, 211, 41},
-				 []byte{37, 33, 19, 155, 176, 144, 199, 195, 108, 53, 208, 135, 86, 238, 38, 253},
-				 []byte{0x25, 0x21, 0x13, 0x9b, 0xb0, 0x90, 0xc7, 0xc3, 0x6c, 0x35, 0xd0, 0x87},
-				 getBigInt("11490932512368444843291431047"),
-				 9,
-				 getBigInt("62046104419768"),
-				 []uint16{20, 6, 34, 23, 9, 6, 21, 20, 4, 25},
-				 []uint16{21, 35, 27, 21, 4, 21, 6, 29, 4},
+			{"Encrypt: round #2",
+				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 73, 58, 149, 29, 211, 41},
+				[]byte{37, 33, 19, 155, 176, 144, 199, 195, 108, 53, 208, 135, 86, 238, 38, 253},
+				[]byte{0x25, 0x21, 0x13, 0x9b, 0xb0, 0x90, 0xc7, 0xc3, 0x6c, 0x35, 0xd0, 0x87},
+				getBigInt("11490932512368444843291431047"),
+				9,
+				getBigInt("62046104419768"),
+				[]uint16{20, 6, 34, 23, 9, 6, 21, 20, 4, 25},
+				[]uint16{21, 35, 27, 21, 4, 21, 6, 29, 4},
 			},
 			{
 				"Encrypt: round #3",
@@ -748,15 +748,15 @@ var ff1Tests = []struct {
 				[]uint16{20, 6, 34, 23, 9, 6, 21, 20, 4, 25},
 				[]uint16{21, 35, 27, 21, 4, 21, 6, 29, 4},
 			},
-			{	"Decrypt: round #2",
-				 []byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 73, 58, 149, 29, 211, 41},
-				 []byte{37, 33, 19, 155, 176, 144, 199, 195, 108, 53, 208, 135, 86, 238, 38, 253},
-				 []byte{0x25, 0x21, 0x13, 0x9b, 0xb0, 0x90, 0xc7, 0xc3, 0x6c, 0x35, 0xd0, 0x87},
-				 getBigInt("11490932512368444843291431047"),
-				 9,
-				 getBigInt("86328211778865"),
-				 []uint16{30, 21, 22, 22, 28, 13, 4, 26, 9},
-				 []uint16{20, 6, 34, 23, 9, 6, 21, 20, 4, 25},
+			{"Decrypt: round #2",
+				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 73, 58, 149, 29, 211, 41},
+				[]byte{37, 33, 19, 155, 176, 144, 199, 195, 108, 53, 208, 135, 86, 238, 38, 253},
+				[]byte{0x25, 0x21, 0x13, 0x9b, 0xb0, 0x90, 0xc7, 0xc3, 0x6c, 0x35, 0xd0, 0x87},
+				getBigInt("11490932512368444843291431047"),
+				9,
+				getBigInt("86328211778865"),
+				[]uint16{30, 21, 22, 22, 28, 13, 4, 26, 9},
+				[]uint16{20, 6, 34, 23, 9, 6, 21, 20, 4, 25},
 			},
 			{
 				"Decrypt: round #1",
@@ -771,7 +771,7 @@ var ff1Tests = []struct {
 			},
 			{
 				"Decrypt: round #0",
-				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55,	55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 89, 199, 207, 155,	163, 54},
+				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 89, 199, 207, 155, 163, 54},
 				[]byte{6, 251, 135, 106, 117, 248, 75, 85, 167, 247, 46, 141, 81, 123, 105, 129},
 				[]byte{0x06, 0xfb, 0x87, 0x6a, 0x75, 0xf8, 0x4b, 0x55, 0xa7, 0xf7, 0x2e, 0x8d},
 				getBigInt("2160989922982028678440365709"),
@@ -833,7 +833,7 @@ var ff1Tests = []struct {
 			{
 				"Encrypt: round #3",
 				[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 66, 185},
-				[]byte{183, 184, 63, 73, 147, 0, 59, 248, 121, 146,	109, 188, 87, 255, 122, 41},
+				[]byte{183, 184, 63, 73, 147, 0, 59, 248, 121, 146, 109, 188, 87, 255, 122, 41},
 				[]byte{0xb7, 0xb8, 0x3f, 0x49, 0x93, 0x00, 0x3b, 0xf8},
 				getBigInt("13238400689887001592"),
 				5,
@@ -978,7 +978,7 @@ var ff1Tests = []struct {
 			{
 				"Decrypt: round #3",
 				[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 66, 185},
-				[]byte{183, 184, 63, 73, 147, 0, 59, 248, 121, 146,	109, 188, 87, 255, 122, 41},
+				[]byte{183, 184, 63, 73, 147, 0, 59, 248, 121, 146, 109, 188, 87, 255, 122, 41},
 				[]byte{0xb7, 0xb8, 0x3f, 0x49, 0x93, 0x00, 0x3b, 0xf8},
 				getBigInt("13238400689887001592"),
 				5,
@@ -1105,7 +1105,7 @@ var ff1Tests = []struct {
 			},
 			{
 				"Encrypt: round #6",
-				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 6,  0,  120,  54},
+				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 6, 0, 120, 54},
 				[]byte{22, 49, 140, 229, 78, 126, 128, 124, 96, 168, 14, 191, 118, 196, 3, 159},
 				[]byte{0x16, 0x31, 0x8c, 0xe5, 0x4e, 0x7e, 0x80, 0x7c},
 				getBigInt("1599214259185549436"),
@@ -1116,7 +1116,7 @@ var ff1Tests = []struct {
 			},
 			{
 				"Encrypt: round #7",
-				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 7,  1,  91,  232},
+				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 7, 1, 91, 232},
 				[]byte{201, 231, 34, 87, 24, 209, 194, 187, 141, 236, 62, 170, 118, 31, 102, 254},
 				[]byte{0xc9, 0xe7, 0x22, 0x57, 0x18, 0xd1, 0xc2, 0xbb},
 				getBigInt("14548634878717575867"),
@@ -1173,7 +1173,7 @@ var ff1Tests = []struct {
 			},
 			{
 				"Decrypt: round #7",
-				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 7,  1,  91,  232},
+				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 7, 1, 91, 232},
 				[]byte{201, 231, 34, 87, 24, 209, 194, 187, 141, 236, 62, 170, 118, 31, 102, 254},
 				[]byte{0xc9, 0xe7, 0x22, 0x57, 0x18, 0xd1, 0xc2, 0xbb},
 				getBigInt("14548634878717575867"),
@@ -1184,7 +1184,7 @@ var ff1Tests = []struct {
 			},
 			{
 				"Decrypt: round #6",
-				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 6,  0,  120,  54},
+				[]byte{57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 0, 0, 6, 0, 120, 54},
 				[]byte{22, 49, 140, 229, 78, 126, 128, 124, 96, 168, 14, 191, 118, 196, 3, 159},
 				[]byte{0x16, 0x31, 0x8c, 0xe5, 0x4e, 0x7e, 0x80, 0x7c},
 				getBigInt("1599214259185549436"),
@@ -1562,7 +1562,7 @@ var ff1Tests = []struct {
 			{
 				"Encrypt: round #4",
 				[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 24, 58},
-				[]byte{58, 44, 107, 123, 115, 117, 7, 192, 52, 250,	62, 7, 161, 97, 215, 251},
+				[]byte{58, 44, 107, 123, 115, 117, 7, 192, 52, 250, 62, 7, 161, 97, 215, 251},
 				[]byte{0x3a, 0x2c, 0x6b, 0x7b, 0x73, 0x75, 0x07, 0xc0},
 				getBigInt("4191843531137288128"),
 				5,
@@ -1685,7 +1685,7 @@ var ff1Tests = []struct {
 			{
 				"Decrypt: round #4",
 				[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 24, 58},
-				[]byte{58, 44, 107, 123, 115, 117, 7, 192, 52, 250,	62, 7, 161, 97, 215, 251},
+				[]byte{58, 44, 107, 123, 115, 117, 7, 192, 52, 250, 62, 7, 161, 97, 215, 251},
 				[]byte{0x3a, 0x2c, 0x6b, 0x7b, 0x73, 0x75, 0x07, 0xc0},
 				getBigInt("4191843531137288128"),
 				5,
@@ -2083,7 +2083,7 @@ var ff1Tests = []struct {
 			},
 			{
 				"Encrypt: round #8",
-				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 12, 140, 223, 223, 23, 150, 56 },
+				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 12, 140, 223, 223, 23, 150, 56},
 				[]byte{219, 115, 118, 188, 190, 243, 246, 208, 39, 191, 160, 207, 71, 15, 7, 214},
 				[]byte{0xdb, 0x73, 0x76, 0xbc, 0xbe, 0xf3, 0xf6, 0xd0, 0x27, 0xbf, 0xa0, 0xcf},
 				getBigInt("67916804341122729541776679119"),
@@ -2118,7 +2118,7 @@ var ff1Tests = []struct {
 			},
 			{
 				"Decrypt: round #8",
-				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 12, 140, 223, 223, 23, 150, 56 },
+				[]byte{55, 55, 55, 55, 112, 113, 114, 115, 55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 12, 140, 223, 223, 23, 150, 56},
 				[]byte{219, 115, 118, 188, 190, 243, 246, 208, 39, 191, 160, 207, 71, 15, 7, 214},
 				[]byte{0xdb, 0x73, 0x76, 0xbc, 0xbe, 0xf3, 0xf6, 0xd0, 0x27, 0xbf, 0xa0, 0xcf},
 				getBigInt("67916804341122729541776679119"),
@@ -2219,7 +2219,7 @@ var ff1Tests = []struct {
 	},
 }
 
-func getBigInt(s string) (big.Int) {
+func getBigInt(s string) big.Int {
 	var x = big.NewInt(0)
 	x, success := x.SetString(s, ff1DefaultRadix)
 	if success == false {
@@ -2331,7 +2331,7 @@ func TestFF1CryptBlocks(t *testing.T) {
 	assert.Nil(t, err)
 	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
 
-	var ff1BlockMode []BlockMode = []BlockMode{
+	var ff1BlockMode []cipher.BlockMode = []cipher.BlockMode{
 		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix),
 		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix),
 	}
@@ -2342,8 +2342,8 @@ func TestFF1CryptBlocks(t *testing.T) {
 		var f func()
 		f = func() {
 			// 1 is smaller than minInputLenFF1
-			var numStr= make([]uint16, 1)
-			var b= NumeralStringToBytes(numStr)
+			var numStr = make([]uint16, 1)
+			var b = NumeralStringToBytes(numStr)
 			ff1.CryptBlocks(b, b)
 		}
 		assert.Panics(t, f)
@@ -2351,8 +2351,8 @@ func TestFF1CryptBlocks(t *testing.T) {
 		// Test radix^len < 100
 		f = func() {
 			// minInputLenFF1 < 5 and radix^len < 100
-			var numStr= make([]uint16, 5)
-			var b= NumeralStringToBytes(numStr)
+			var numStr = make([]uint16, 5)
+			var b = NumeralStringToBytes(numStr)
 			ff1.CryptBlocks(b, b)
 		}
 		assert.Panics(t, f)
@@ -2360,20 +2360,20 @@ func TestFF1CryptBlocks(t *testing.T) {
 		// Test len(dst) != len(src)
 		f = func() {
 			// minInputLenFF1 < 10 and radix^len > 100
-			var numStr= make([]uint16, 10)
-			var b= NumeralStringToBytes(numStr)
-			var dst= make([]byte, len(b)+1)
+			var numStr = make([]uint16, 10)
+			var b = NumeralStringToBytes(numStr)
+			var dst = make([]byte, len(b)+1)
 			ff1.CryptBlocks(dst, b)
 		}
 		assert.Panics(t, f)
 
 		// Test invalid numeral string
 		f = func() {
-			var validLength= 10
-			var numStr= make([]uint16, validLength)
+			var validLength = 10
+			var numStr = make([]uint16, validLength)
 			assert.Equal(t, radix, uint32(2))
 			numStr[0] = 3 // invalid for radix 2
-			var b= NumeralStringToBytes(numStr)
+			var b = NumeralStringToBytes(numStr)
 			ff1.CryptBlocks(b, b)
 		}
 		assert.Panics(t, f)
@@ -2381,7 +2381,7 @@ func TestFF1CryptBlocks(t *testing.T) {
 }
 
 // This test check that the function SetTweak of the FF1Encrypter and FF1Decrypter works correctly.
-func TestSetFF1Tweak (t *testing.T) {
+func TestSetFF1Tweak(t *testing.T) {
 	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 
 	type fpeWithSetTweak interface {
@@ -2390,7 +2390,7 @@ func TestSetFF1Tweak (t *testing.T) {
 	}
 
 	// FF1 Encrypter
-	var encrypter BlockMode
+	var encrypter cipher.BlockMode
 	{
 		var err error
 		encrypter, err = getFF1Encrypter(key, tweak, uint32(ff1DefaultRadix))
@@ -2407,21 +2407,21 @@ func TestSetFF1Tweak (t *testing.T) {
 
 	// Set valid tweak
 	var f func()
-	f = func()  {
+	f = func() {
 		var tweak = make([]byte, maxTweakLenFF1)
 		encWithSetTweak.SetTweak(tweak)
 	}
 	assert.NotPanics(t, f)
 
 	// Set invalid tweak
-	f = func()  {
+	f = func() {
 		var tweak = make([]byte, maxTweakLenFF1+1)
 		encWithSetTweak.SetTweak(tweak)
 	}
 	assert.Panics(t, f)
 
 	// FF1 Decrypter
-	var decrypter BlockMode
+	var decrypter cipher.BlockMode
 	{
 		var err error
 		decrypter, err = getFF1Decrypter(key, tweak, uint32(ff1DefaultRadix))
@@ -2437,14 +2437,14 @@ func TestSetFF1Tweak (t *testing.T) {
 	}
 
 	// Set valid tweak
-	f = func()  {
+	f = func() {
 		var tweak = make([]byte, maxTweakLenFF1)
 		decWithSetTweak.SetTweak(tweak)
 	}
 	assert.NotPanics(t, f)
 
 	// Set invalid tweak
-	f = func()  {
+	f = func() {
 		var tweak = make([]byte, maxTweakLenFF1+1)
 		decWithSetTweak.SetTweak(tweak)
 	}
@@ -2452,7 +2452,7 @@ func TestSetFF1Tweak (t *testing.T) {
 }
 
 // This test check that the function SetRadix of the FF1Encrypter and FF1Decrypter works correctly.
-func TestSetFF1Radix (t *testing.T) {
+func TestSetFF1Radix(t *testing.T) {
 	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 
 	var radix = uint32(rand.Intn(1000) + minRadixFF1)
@@ -2466,7 +2466,7 @@ func TestSetFF1Radix (t *testing.T) {
 	// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
 	// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
 	// upper bound to 400 for performance reasons.
-	var l = int(rand.Uint32() % 394) + 7
+	var l = int(rand.Uint32()%394) + 7
 	var plaintextRadix = generateRandomNumeralString(radix, l)
 	var plaintextOtherRadix = generateRandomNumeralString(otherRadix, l)
 	var plaintextBytes = make([]byte, 2*len(plaintextRadix))
@@ -2477,7 +2477,7 @@ func TestSetFF1Radix (t *testing.T) {
 	var decryptedOtherRadix = make([]uint16, len(plaintextOtherRadix))
 
 	// Encipher plaintext
-	var encrypter BlockMode
+	var encrypter cipher.BlockMode
 	{
 		var err error
 		encrypter, err = getFF1Encrypter(key, tweak, radix)
@@ -2499,7 +2499,7 @@ func TestSetFF1Radix (t *testing.T) {
 	ciphertextOtherRadix = BytesToNumeralString(ciphertextBytes)
 
 	// Decipher ciphertext
-	var decrypter BlockMode
+	var decrypter cipher.BlockMode
 	{
 		var err error
 		decrypter, err = getFF1Decrypter(key, tweak, radix)
@@ -2526,14 +2526,14 @@ func TestSetFF1Radix (t *testing.T) {
 
 	// Set invalid radix
 	var f func()
-	f = func()  {
-		var radix = uint32(maxRadixFF1+1)
+	f = func() {
+		var radix = uint32(maxRadixFF1 + 1)
 		encrypterWithSetRadix.SetRadix(radix)
 	}
 	assert.Panics(t, f)
 
-	f = func()  {
-		var radix = uint32(maxRadixFF1+1)
+	f = func() {
+		var radix = uint32(maxRadixFF1 + 1)
 		decrypterWithSetRadix.SetRadix(radix)
 	}
 	assert.Panics(t, f)
@@ -2600,7 +2600,7 @@ func TestGetQ(t *testing.T) {
 		// Iter over each decryption round.
 		for i, round := range test.decRounds {
 			var standardNbrOfFF1Rounds = 10
-			var idx = standardNbrOfFF1Rounds-i-1
+			var idx = standardNbrOfFF1Rounds - i - 1
 			var expectedQ = round.q
 			var q = getFF1Q(tweak, radix, beta, idx, x)
 			x = round.a
@@ -2735,19 +2735,19 @@ func TestFF1EncryptionDecryption(t *testing.T) {
 		var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 
 		// Chose random radix between minRadixFF1 and maxRadixFF1
-		var radix = (rand.Uint32() % (maxRadixFF1-minRadixFF1)) + minRadixFF1
+		var radix = (rand.Uint32() % (maxRadixFF1 - minRadixFF1)) + minRadixFF1
 		// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
 		// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
 		// upper bound to 400 for performance reasons.
-		var l = int(rand.Uint32() % 394) + 7
+		var l = int(rand.Uint32()%394) + 7
 
-		var encrypter BlockMode
+		var encrypter cipher.BlockMode
 		{
 			var err error
 			encrypter, err = getFF1Encrypter(key, tweak, radix)
 			assert.Nil(t, err)
 		}
-		var decrypter BlockMode
+		var decrypter cipher.BlockMode
 		{
 			var err error
 			decrypter, err = getFF1Decrypter(key, tweak, radix)
@@ -2777,15 +2777,15 @@ func TestFF1CornerCases(t *testing.T) {
 	// We take inputs length at random between 7 and 400. We set the lower bound to 7 so
 	// we always satisfy the condition radix^len >= 100 (minRadix = 2). We set the
 	// upper bound to 400 for performance reasons.
-	var l = int(rand.Uint32() % 394) + 7
+	var l = int(rand.Uint32()%394) + 7
 
-	var encrypter BlockMode
+	var encrypter cipher.BlockMode
 	{
 		var err error
 		encrypter, err = getFF1Encrypter(key, tweak, radix)
 		assert.Nil(t, err)
 	}
-	var decrypter BlockMode
+	var decrypter cipher.BlockMode
 	{
 		var err error
 		decrypter, err = getFF1Decrypter(key, tweak, radix)
@@ -2795,7 +2795,7 @@ func TestFF1CornerCases(t *testing.T) {
 	// Encrypt
 	var plaintext = make([]uint16, l)
 	for i := 0; i < l; i++ {
-		plaintext[i] = maxRadixFF1-1
+		plaintext[i] = maxRadixFF1 - 1
 	}
 	var src = NumeralStringToBytes(plaintext)
 	var dst = make([]byte, len(src))
@@ -2810,18 +2810,17 @@ func TestFF1CornerCases(t *testing.T) {
 	assert.Equal(t, plaintext, decrypted)
 }
 
-
 func TestFF1BlockSize(t *testing.T) {
 	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 	var radix = uint32(rand.Intn(1000) + minRadixFF1)
 
-	var encrypter BlockMode
+	var encrypter cipher.BlockMode
 	{
 		var err error
 		encrypter, err = getFF1Encrypter(key, tweak, radix)
 		assert.Nil(t, err)
 	}
-	var decrypter BlockMode
+	var decrypter cipher.BlockMode
 	{
 		var err error
 		decrypter, err = getFF1Decrypter(key, tweak, radix)
@@ -2867,8 +2866,8 @@ func getFF1Decrypter(key, tweak []byte, radix uint32) (cipher.BlockMode, error) 
 }
 
 // Mock BlockMode
-type mockBlockMode struct {}
+type mockBlockMode struct{}
 
 // Return a BlockMode without SetIv method
-func (c *mockBlockMode) BlockSize() int { return 16 }
+func (c *mockBlockMode) BlockSize() int              { return 16 }
 func (c *mockBlockMode) CryptBlocks(dst, src []byte) {}

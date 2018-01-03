@@ -1,11 +1,11 @@
 package fpe
 
 import (
-	"testing"
+	"github.com/stretchr/testify/assert"
 	"math/big"
 	"math/rand"
+	"testing"
 	"time"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -57,7 +57,7 @@ func TestStrMRadix(t *testing.T) {
 	x.Exp(x, big.NewInt(int64(m)), nil)
 
 	var f func()
-	f = func()  {
+	f = func() {
 		strMRadix(radix, m, x)
 	}
 
@@ -110,7 +110,7 @@ func TestGetAsBBytes(t *testing.T) {
 	x.Exp(x, big.NewInt(b), nil)
 
 	var f func()
-	f = func()  {
+	f = func() {
 		getAsBBytes(x, uint64(b))
 	}
 
@@ -167,8 +167,8 @@ func TestBytesToNumeralString(t *testing.T) {
 func TestConversions(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < nbrTests; i++ {
-		var l = int(rand.Uint32() % 2000) + 10
-		var radix = (rand.Uint32() % (maxRadixFF1-10)) + 10
+		var l = int(rand.Uint32()%2000) + 10
+		var radix = (rand.Uint32() % (maxRadixFF1 - 10)) + 10
 		var x = generateRandomNumeralString(radix, l)
 		var result = BytesToNumeralString(NumeralStringToBytes(x))
 
@@ -196,7 +196,7 @@ func TestXorBytes(t *testing.T) {
 
 }
 
-func generateRandomNumeralString(radix uint32, len int) ([]uint16) {
+func generateRandomNumeralString(radix uint32, len int) []uint16 {
 	var out = make([]uint16, len)
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < len; i++ {
@@ -206,10 +206,10 @@ func generateRandomNumeralString(radix uint32, len int) ([]uint16) {
 }
 
 // Mock Block Cipher
-type mockBlock struct {}
+type mockBlock struct{}
 
 // Return a block size different from AES (16)
-func (c *mockBlock) BlockSize() int { return 10 }
+func (c *mockBlock) BlockSize() int          { return 10 }
 func (c *mockBlock) Encrypt(dst, src []byte) {}
 func (c *mockBlock) Decrypt(dst, src []byte) {}
 
