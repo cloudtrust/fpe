@@ -9,3 +9,7 @@ install:
   - $GOPATH/bin/dep ensure -v
 script:
   - $GOPATH/bin/goveralls -service=travis-ci
+branches:
+  only:
+    - master
+    - fpe-fix
