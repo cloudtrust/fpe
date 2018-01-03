@@ -68,7 +68,7 @@ func rev(x []uint16) []uint16 {
 	return out
 }
 
-// revB takes a byte string x returns the byte string that consists
+// RevB takes a byte string x returns the byte string that consists
 // of the bytes of x in reverse order.
 func RevB(x []byte) []byte {
 	var l = len(x)
