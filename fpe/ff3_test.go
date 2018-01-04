@@ -2447,7 +2447,7 @@ func TestNewFF3Encrypter(t *testing.T) {
 	// Invalid tweak length
 	var f func()
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF3)
+		var radix = uint32(maxRadixFF3)
 		var tweak = make([]byte, tweakLenFF3+1)
 		rand.Read(tweak)
 		NewFF3Encrypter(aesBlock, tweak, radix)
@@ -2456,7 +2456,7 @@ func TestNewFF3Encrypter(t *testing.T) {
 
 	// Invalid radix
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF3 + 1)
+		var radix = uint32(maxRadixFF3 + 1)
 		var tweak = make([]byte, tweakLenFF3)
 		rand.Read(tweak)
 		NewFF3Encrypter(aesBlock, tweak, radix)
@@ -2464,9 +2464,9 @@ func TestNewFF3Encrypter(t *testing.T) {
 	assert.Panics(t, f)
 
 	// Invalid Block
-	var invalidBlock *mockBlock = &mockBlock{}
+	var invalidBlock = &mockBlock{}
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF3)
+		var radix = uint32(maxRadixFF3)
 		var tweak = make([]byte, tweakLenFF3)
 		rand.Read(tweak)
 		NewFF3Encrypter(invalidBlock, tweak, radix)
@@ -2484,7 +2484,7 @@ func TestNewFF3Decrypter(t *testing.T) {
 	// Invalid tweak length
 	var f func()
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF3)
+		var radix = uint32(maxRadixFF3)
 		var tweak = make([]byte, tweakLenFF3+1)
 		rand.Read(tweak)
 		NewFF3Decrypter(aesBlock, tweak, radix)
@@ -2493,7 +2493,7 @@ func TestNewFF3Decrypter(t *testing.T) {
 
 	// Invalid radix
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF3 + 1)
+		var radix = uint32(maxRadixFF3 + 1)
 		var tweak = make([]byte, tweakLenFF3)
 		rand.Read(tweak)
 		NewFF3Decrypter(aesBlock, tweak, radix)
@@ -2501,9 +2501,9 @@ func TestNewFF3Decrypter(t *testing.T) {
 	assert.Panics(t, f)
 
 	// Invalid Block
-	var invalidBlock *mockBlock = &mockBlock{}
+	var invalidBlock = &mockBlock{}
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF3)
+		var radix = uint32(maxRadixFF3)
 		var tweak = make([]byte, tweakLenFF3)
 		rand.Read(tweak)
 		NewFF3Decrypter(invalidBlock, tweak, radix)
@@ -2519,7 +2519,7 @@ func TestFF3CryptBlocks(t *testing.T) {
 	var aesBlock, err = aes.NewCipher(key)
 	assert.Nil(t, err)
 
-	var ff3BlockMode []cipher.BlockMode = []cipher.BlockMode{
+	var ff3BlockMode = []cipher.BlockMode{
 		NewFF3Encrypter(aesBlock, tweak, radix),
 		NewFF3Decrypter(aesBlock, tweak, radix),
 	}
@@ -2644,7 +2644,7 @@ func TestSetFF3Radix(t *testing.T) {
 	var key, tweak, _ []byte = getRandomParameters(ff3DefaultKeySize, tweakLenFF3, 0)
 
 	var radix = uint32(rand.Intn(20) + minRadixFF3)
-	var otherRadix uint32 = radix + 10
+	var otherRadix = radix + 10
 
 	type fpeWithSetRadix interface {
 		cipher.BlockMode

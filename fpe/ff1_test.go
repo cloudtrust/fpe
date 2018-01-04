@@ -2238,7 +2238,7 @@ func TestNewFF1Encrypter(t *testing.T) {
 	// Invalid tweak length
 	var f func()
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1)
+		var radix = uint32(maxRadixFF1)
 		var tweak = make([]byte, maxTweakLenFF1+1)
 		rand.Read(tweak)
 		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
@@ -2247,7 +2247,7 @@ func TestNewFF1Encrypter(t *testing.T) {
 
 	// Invalid radix
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1 + 1)
+		var radix = uint32(maxRadixFF1 + 1)
 		var tweak = make([]byte, maxTweakLenFF1)
 		rand.Read(tweak)
 		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix)
@@ -2255,9 +2255,9 @@ func TestNewFF1Encrypter(t *testing.T) {
 	assert.Panics(t, f)
 
 	// Invalid Block
-	var invalidBlock *mockBlock = &mockBlock{}
+	var invalidBlock = &mockBlock{}
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1)
+		var radix = uint32(maxRadixFF1)
 		var tweak = make([]byte, maxTweakLenFF1)
 		rand.Read(tweak)
 		NewFF1Encrypter(invalidBlock, cbcMode, tweak, radix)
@@ -2265,9 +2265,9 @@ func TestNewFF1Encrypter(t *testing.T) {
 	assert.Panics(t, f)
 
 	// Invalid BlockMode
-	var invalidBlockMode *mockBlockMode = &mockBlockMode{}
+	var invalidBlockMode = &mockBlockMode{}
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1)
+		var radix = uint32(maxRadixFF1)
 		var tweak = make([]byte, maxTweakLenFF1)
 		rand.Read(tweak)
 		NewFF1Encrypter(aesBlock, invalidBlockMode, tweak, radix)
@@ -2285,7 +2285,7 @@ func TestNewFF1Decrypter(t *testing.T) {
 	// Invalid tweak length
 	var f func()
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1)
+		var radix = uint32(maxRadixFF1)
 		var tweak = make([]byte, maxTweakLenFF1+1)
 		rand.Read(tweak)
 		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
@@ -2294,7 +2294,7 @@ func TestNewFF1Decrypter(t *testing.T) {
 
 	// Invalid radix
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1 + 1)
+		var radix = uint32(maxRadixFF1 + 1)
 		var tweak = make([]byte, maxTweakLenFF1)
 		rand.Read(tweak)
 		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix)
@@ -2302,9 +2302,9 @@ func TestNewFF1Decrypter(t *testing.T) {
 	assert.Panics(t, f)
 
 	// Invalid Block
-	var invalidBlock *mockBlock = &mockBlock{}
+	var invalidBlock = &mockBlock{}
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1)
+		var radix = uint32(maxRadixFF1)
 		var tweak = make([]byte, maxTweakLenFF1)
 		rand.Read(tweak)
 		NewFF1Decrypter(invalidBlock, cbcMode, tweak, radix)
@@ -2312,9 +2312,9 @@ func TestNewFF1Decrypter(t *testing.T) {
 	assert.Panics(t, f)
 
 	// Invalid BlockMode
-	var invalidBlockMode *mockBlockMode = &mockBlockMode{}
+	var invalidBlockMode = &mockBlockMode{}
 	f = func() {
-		var radix uint32 = uint32(maxRadixFF1)
+		var radix = uint32(maxRadixFF1)
 		var tweak = make([]byte, maxTweakLenFF1)
 		rand.Read(tweak)
 		NewFF1Decrypter(aesBlock, invalidBlockMode, tweak, radix)
@@ -2331,7 +2331,7 @@ func TestFF1CryptBlocks(t *testing.T) {
 	assert.Nil(t, err)
 	var cbcMode = cipher.NewCBCEncrypter(aesBlock, iv)
 
-	var ff1BlockMode []cipher.BlockMode = []cipher.BlockMode{
+	var ff1BlockMode = []cipher.BlockMode{
 		NewFF1Encrypter(aesBlock, cbcMode, tweak, radix),
 		NewFF1Decrypter(aesBlock, cbcMode, tweak, radix),
 	}
@@ -2456,7 +2456,7 @@ func TestSetFF1Radix(t *testing.T) {
 	var key, tweak, _ []byte = getRandomParameters(ff1DefaultKeySize, ff1DefaultTweakSize, blockSizeFF1)
 
 	var radix = uint32(rand.Intn(1000) + minRadixFF1)
-	var otherRadix uint32 = radix + 10
+	var otherRadix = radix + 10
 
 	type fpeWithSetRadix interface {
 		cipher.BlockMode
