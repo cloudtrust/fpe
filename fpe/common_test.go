@@ -15,24 +15,24 @@ const (
 func TestNumRadix(t *testing.T) {
 	var x = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	var radix uint32 = 20
-	var expected *big.Int = big.NewInt(28365650969)
-	var result *big.Int = numRadix(x, radix)
+	var expected = big.NewInt(28365650969)
+	var result = numRadix(x, radix)
 
 	assert.Equal(t, result, expected)
 }
 
 func TestNum(t *testing.T) {
 	var x = []byte{0x52, 0x1f, 0x6e, 0x4a, 0x88, 0xb7, 0xe0, 0x30}
-	var expected *big.Int = big.NewInt(5917569701788508208)
-	var result *big.Int = num(x)
+	var expected = big.NewInt(5917569701788508208)
+	var result = num(x)
 
 	assert.Equal(t, result, expected)
 }
 
 func TestStrMRadix(t *testing.T) {
-	var x *big.Int = big.NewInt(123456789)
+	var x = big.NewInt(123456789)
 	var expected = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-	var result []uint16 = strMRadix(10, 10, x)
+	var result = strMRadix(10, 10, x)
 
 	assert.Equal(t, result, expected)
 
@@ -43,7 +43,7 @@ func TestStrMRadix(t *testing.T) {
 	x.Exp(x, big.NewInt(int64(m)), nil)
 	x.Sub(x, big.NewInt(1))
 	result = strMRadix(radix, m, x)
-	var l uint32 = uint32(len(result))
+	var l = uint32(len(result))
 
 	assert.Equal(t, l, m)
 	for _, x := range result {
@@ -67,7 +67,7 @@ func TestStrMRadix(t *testing.T) {
 func TestRev(t *testing.T) {
 	var x = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	var expected = []uint16{10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}
-	var result []uint16 = rev(x)
+	var result = rev(x)
 
 	assert.Equal(t, result, expected)
 }
@@ -75,29 +75,29 @@ func TestRev(t *testing.T) {
 func TestRevB(t *testing.T) {
 	var x = []byte{0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF}
 	var expected = []byte{0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01}
-	var result []byte = RevB(x)
+	var result = RevB(x)
 
 	assert.Equal(t, result, expected)
 }
 
 func TestGetAsBBytes(t *testing.T) {
 	for b := 1; b <= 100; b++ {
-		var x *big.Int = big.NewInt(int64(b))
+		var x = big.NewInt(int64(b))
 		// Here we get 1 as 1 byte, 2 as 2 bytes, ...
-		var result []byte = getAsBBytes(x, uint64(b))
+		var result = getAsBBytes(x, uint64(b))
 		assert.Equal(t, len(result), b)
 
-		var v *big.Int = big.NewInt(0).SetBytes(result)
+		var v = big.NewInt(0).SetBytes(result)
 		assert.Equal(t, v, x)
 	}
 	// Test corner cases
 	for b := 1; b <= 100; b++ {
 		// x = 256^b - 1 (last value before overflow)
-		var x *big.Int = big.NewInt(256)
+		var x = big.NewInt(256)
 		x.Exp(x, big.NewInt(int64(b)), nil)
 		x.Sub(x, big.NewInt(1))
 
-		var result []byte = getAsBBytes(x, uint64(b))
+		var result = getAsBBytes(x, uint64(b))
 		assert.Equal(t, len(result), b)
 
 		for _, x := range result {
@@ -105,7 +105,7 @@ func TestGetAsBBytes(t *testing.T) {
 		}
 	}
 	// Test overflow
-	var x *big.Int = big.NewInt(256)
+	var x = big.NewInt(256)
 	var b int64 = 10
 	x.Exp(x, big.NewInt(b), nil)
 
@@ -122,7 +122,7 @@ func TestNumeralStringToBytes(t *testing.T) {
 	var expected = []byte{
 		0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04,
 		0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00, 0x08, 0x00, 0x09}
-	var result []byte = NumeralStringToBytes(x)
+	var result = NumeralStringToBytes(x)
 
 	assert.Equal(t, result, expected)
 
@@ -146,7 +146,7 @@ func TestBytesToNumeralString(t *testing.T) {
 		0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04,
 		0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00, 0x08, 0x00, 0x09}
 	var expected = []uint16{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-	var result []uint16 = BytesToNumeralString(x)
+	var result = BytesToNumeralString(x)
 
 	assert.Equal(t, result, expected)
 
@@ -186,9 +186,9 @@ func TestIsNumeralStringValid(t *testing.T) {
 }
 
 func TestXorBytes(t *testing.T) {
-	var x []byte = []byte{0x0F, 0x0F, 0x0F, 0x0F, 0x0F}
-	var y []byte = []byte{0xF0, 0xF0, 0xF0, 0xF0}
-	var expected []byte = []byte{0xFF, 0xFF, 0xFF, 0xFF, 0x00}
+	var x = []byte{0x0F, 0x0F, 0x0F, 0x0F, 0x0F}
+	var y = []byte{0xF0, 0xF0, 0xF0, 0xF0}
+	var expected = []byte{0xFF, 0xFF, 0xFF, 0xFF, 0x00}
 	var dst = make([]byte, len(x))
 
 	xorBytes(dst, x, y)
